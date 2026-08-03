@@ -129,6 +129,52 @@ API highlights
 - BlePeripheral: addService(), removeService(), startAdvertising(), stopAdvertising(), onCentralConnected, onReadRequest, notifyCharacteristic(), publishL2CapChannel()
 - AdvertiseSettings, GattServiceDefinition, GattCharacteristicDefinition, CharacteristicProperties, CharacteristicPermissions
 
+APIs used & platform mapping
+This package provides a single Dart API surface that delegates to platform-specific implementations via the platform interface (ble_plus_platform_interface). Each platform implementation maps the high-level operations to native OS BLE APIs:
+
+- Android (Kotlin)
+  - Core APIs: BluetoothManager, BluetoothAdapter, BluetoothLeScanner, BluetoothGatt, BluetoothGattServer
+  - Responsibilities: scanning (BluetoothLeScanner), connecting (BluetoothGatt), GATT server/advertising (BluetoothGattServer / AdvertiseSettings/AdvertiseData), L2CAP on API 29+ (BluetoothDevice.openL2capChannel).
+  - Notes: runtime permissions (BLUETOOTH_SCAN, BLUETOOTH_CONNECT, BLUETOOTH_ADVERTISE, ACCESS_FINE_LOCATION) and foreground service for background scans/advertising.
+
+- iOS / macOS (Swift — CoreBluetooth)
+  - Core APIs: CBCentralManager, CBPeripheralManager, CBPeripheral, CBUUID, CBMutableService, CBMutableCharacteristic
+  - Responsibilities: scanning/connecting (CBCentralManager), peripheral/GATT server (CBPeripheralManager), L2CAP via CoreBluetooth on supported OS versions, state restoration for background.
+  - Notes: add NSBluetoothAlwaysUsageDescription and UIBackgroundModes for background restore.
+
+- Windows (C++ / WinRT)
+  - Core APIs: Windows.Devices.Bluetooth, BluetoothLEDevice, GattCharacteristic, GattServiceProvider
+  - Responsibilities: central operations using WinRT BLE; limited peripheral support depending on Windows APIs and versions.
+
+- Linux (BlueZ D-Bus)
+  - Core APIs: BlueZ D-Bus interface (org.bluez)
+  - Responsibilities: central operations via D-Bus; limited peripheral/L2CAP support depending on BlueZ and distro configuration. Requires bluez installed and appropriate permissions.
+
+- Web (Web Bluetooth API)
+  - Core APIs: navigator.bluetooth.requestDevice(), BluetoothRemoteGATTServer, BluetoothRemoteGATTCharacteristic
+  - Responsibilities: central-only (device picker), GATT interactions via browser APIs. Requires HTTPS and user gesture; not supported on all browsers.
+
+How it works (architecture & runtime flow)
+1. App calls into the public Dart API (BleCentral/BlePeripheral).
+2. The Dart API validates inputs, converts values (e.g., Guid types), and calls the platform interface methods.
+3. Platform implementations (per platform) receive those calls and map them to native APIs. Results and events are marshalled back into Dart types.
+4. Streams and event channels deliver asynchronous events: scan results, connection state, characteristic notifications, bond state, MTU changes, and L2CAP data.
+5. The public API exposes Futures for single operations (connect, read, write) and Streams for continuous events (scan results, notifications).
+
+Threading and permissions
+- Native operations run on platform threads; results are posted back to Dart via platform channels.
+- Permission checks are performed per-platform. On Android, request runtime permissions before scanning/connecting on modern OSes.
+
+Limitations & platform differences
+- Web: Central only, uses device picker; no background scanning or peripheral features.
+- Linux/Windows: peripheral and L2CAP capability may be limited compared to Android/iOS/macOS.
+- MTU and connection parameter APIs are platform-dependent (Android supports explicit MTU requests; iOS/macOS auto-negotiate).
+
+Guidance for integrators
+- Always check central.capabilities before using advanced features (peripheral, l2cap).
+- Handle BleError subclasses explicitly to provide robust UX across platforms.
+- For background scanning/advertising, implement platform-specific config (iOS Info.plist, Android foreground service setup).
+
 Error handling
 All errors extend BleError for exhaustive handling:
 ```dart

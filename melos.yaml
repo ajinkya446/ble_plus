@@ -1,0 +1,3 @@
+# This file is no longer used. The project is a single Flutter plugin package.
+# Melos was removed in favor of a simpler single-package structure.
+# To federate later, split packages out and re-enable melos.

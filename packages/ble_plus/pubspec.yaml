@@ -1,0 +1,20 @@
+name: ble_plus_unused
+description: DEPRECATED - All code lives in the root ble_plus package.
+version: 0.1.0
+publish_to: 'none'
+
+environment:
+  sdk: ^3.11.0
+  flutter: '>=3.3.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  plugin_platform_interface: ^2.0.2
+  ble_plus_platform_interface:
+    path: ../ble_plus_platform_interface
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0

@@ -1,0 +1,13 @@
+name: ble_plus_example_unused
+description: DEPRECATED - see root example/ instead.
+publish_to: 'none'
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true

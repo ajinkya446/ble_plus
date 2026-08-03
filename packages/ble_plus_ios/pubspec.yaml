@@ -1,0 +1,18 @@
+name: ble_plus_ios_unused
+description: Unused - see root package.
+version: 0.0.1
+publish_to: 'none'
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  plugin_platform_interface: ^2.0.2
+  ble_plus_platform_interface:
+    path: ../ble_plus_platform_interface
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter

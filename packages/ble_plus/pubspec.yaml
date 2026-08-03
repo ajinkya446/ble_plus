@@ -1,6 +1,6 @@
 name: ble_plus_unused
 description: DEPRECATED - All code lives in the root ble_plus package.
-version: 0.1.0
+version: 1.0.0
 publish_to: 'none'
 
 environment:

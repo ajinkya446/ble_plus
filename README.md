@@ -357,11 +357,11 @@ linux/     # C++ (BlueZ GDBus)
 windows/   # C++ (WinRT BLE)
 ```
 
-## Migrating from flutter_blue_plus
+## Limitations Fixes
 
-`ble_plus` addresses all known limitations of `flutter_blue_plus`:
+`ble_plus` addresses all known limitations :
 
-| Limitation in flutter_blue_plus | Fixed in ble_plus |
+| Limitation | Fixed in ble_plus |
 |--------------------------------|-------------------|
 | No peripheral/server role | ✅ Full `BlePeripheral` API |
 | No L2CAP channels | ✅ `BleL2CapChannel` |

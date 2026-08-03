@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0
+## 1.0.0
 
 - Initial release
 - BLE Central role: scan, connect, discover services, read/write/notify characteristics

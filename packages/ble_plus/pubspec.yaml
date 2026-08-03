@@ -1,7 +1,15 @@
-name: ble_plus_unused
-description: DEPRECATED - All code lives in the root ble_plus package.
+name: ble_plus
+description: A production-ready Flutter BLE plugin supporting Central and Peripheral roles, L2CAP, background operation, and connection parameters.
 version: 1.0.0
-publish_to: 'none'
+homepage: https://github.com/ajinkya446/ble_plus
+repository: https://github.com/ajinkya446/ble_plus
+issue_tracker: https://github.com/ajinkya446/ble_plus/issues
+
+topics:
+  - ble
+  - bluetooth
+  - bluetooth-low-energy
+  - peripheral
 
 environment:
   sdk: ^3.11.0
@@ -10,11 +18,29 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_web_plugins:
+    sdk: flutter
   plugin_platform_interface: ^2.0.2
-  ble_plus_platform_interface:
-    path: ../ble_plus_platform_interface
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.example.ble_plus
+        pluginClass: BlePlusPlugin
+      ios:
+        pluginClass: BlePlusPlugin
+      macos:
+        pluginClass: BlePlusPlugin
+      web:
+        pluginClass: BlePlusWeb
+        fileName: src/platform/ble_plus_web.dart
+      linux:
+        dartPluginClass: BlePlusLinux
+      windows:
+        pluginClass: BlePlusPlugin

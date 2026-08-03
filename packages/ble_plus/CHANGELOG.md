@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.2 - 2026-08-03
+
+- Publish prep: bump version to 1.0.2 and fix package validation errors.
+- Added dependency on ble_plus_platform_interface (local path) so platform contracts are available at publish time.
+- Minor docs and metadata improvements.
+
 ## 1.0.1 - 2026-08-03
 
 - Patch release: metadata and documentation improvements aimed at reaching full pub.dev score.

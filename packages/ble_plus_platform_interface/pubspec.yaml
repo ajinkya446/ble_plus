@@ -14,3 +14,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+homepage: https://github.com/ajinkya446/ble_plus
+repository: https://github.com/ajinkya446/ble_plus
+issue_tracker: https://github.com/ajinkya446/ble_plus/issues

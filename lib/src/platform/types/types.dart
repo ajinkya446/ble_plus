@@ -1,4 +1,3 @@
-/// Barrel export for all platform interface types.
 export 'ble_adapter_state.dart';
 export 'ble_bond_state.dart';
 export 'ble_connection_state.dart';

@@ -798,7 +798,7 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('${widget.device.displayName}',
+                        Text(widget.device.displayName,
                             style: const TextStyle(fontWeight: FontWeight.bold)),
                         Text('MTU: ${_connection!.mtu} | Services: ${_services.length}',
                             style: const TextStyle(fontSize: 12, color: Colors.grey)),

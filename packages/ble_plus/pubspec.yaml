@@ -1,6 +1,6 @@
 name: ble_plus
 description: A production-ready Flutter BLE plugin supporting Central and Peripheral roles, L2CAP, background operation, and connection parameters.
-version: 1.0.0
+version: 1.0.1
 homepage: https://github.com/ajinkya446/ble_plus
 repository: https://github.com/ajinkya446/ble_plus
 issue_tracker: https://github.com/ajinkya446/ble_plus/issues

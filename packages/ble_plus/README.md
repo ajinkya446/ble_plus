@@ -148,26 +148,58 @@ APIs used & platform mapping
 This package provides a single Dart API surface that delegates to platform-specific implementations via the platform interface (ble_plus_platform_interface). Each platform implementation maps the high-level operations to native OS BLE APIs:
 
 - Android (Kotlin)
-  - Core APIs: BluetoothManager, BluetoothAdapter, BluetoothLeScanner, BluetoothGatt, BluetoothGattServer
-  - Responsibilities: scanning (BluetoothLeScanner), connecting (BluetoothGatt), GATT server/advertising (BluetoothGattServer / AdvertiseSettings/AdvertiseData), L2CAP on API 29+ (BluetoothDevice.openL2capChannel).
-  - Notes: runtime permissions (BLUETOOTH_SCAN, BLUETOOTH_CONNECT, BLUETOOTH_ADVERTISE, ACCESS_FINE_LOCATION) and foreground service for background scans/advertising.
+  - Core Android BLE APIs and classes used:
+    - android.bluetooth.BluetoothManager (adapter access)
+    - android.bluetooth.BluetoothAdapter
+    - android.bluetooth.le.BluetoothLeScanner (startScan/stopScan)
+    - android.bluetooth.le.ScanCallback / ScanFilter / ScanSettings
+    - android.bluetooth.BluetoothDevice (getAddress, createBond, openL2capChannel on API 29+)
+    - android.bluetooth.BluetoothGatt (connectGatt, requestMtu, readCharacteristic, writeCharacteristic)
+    - android.bluetooth.BluetoothGattCallback (onConnectionStateChange, onServicesDiscovered, onCharacteristicRead/onCharacteristicWrite, onCharacteristicChanged, onMtuChanged, onReadRemoteRssi)
+    - android.bluetooth.BluetoothGattServer & BluetoothGattServerCallback (peripheral/GATT server handlers)
+    - android.bluetooth.le.BluetoothLeAdvertiser, AdvertiseSettings, AdvertiseData, AdvertiseCallback (advertising)
+    - Pairing APIs: createBond(), removeBond()
+  - Responsibilities: scanning, connecting, service discovery, GATT read/write/notify, advertising/GATT server, L2CAP channels (API 29+), MTU and RSSI requests.
+  - Notes: request runtime permissions (BLUETOOTH_SCAN, BLUETOOTH_CONNECT, BLUETOOTH_ADVERTISE, ACCESS_FINE_LOCATION) and use a foreground service for reliable background scanning/advertising.
 
 - iOS / macOS (Swift — CoreBluetooth)
-  - Core APIs: CBCentralManager, CBPeripheralManager, CBPeripheral, CBUUID, CBMutableService, CBMutableCharacteristic
-  - Responsibilities: scanning/connecting (CBCentralManager), peripheral/GATT server (CBPeripheralManager), L2CAP via CoreBluetooth on supported OS versions, state restoration for background.
-  - Notes: add NSBluetoothAlwaysUsageDescription and UIBackgroundModes for background restore.
+  - Core CoreBluetooth APIs and types used:
+    - CBCentralManager (scanForPeripherals, connect)
+    - CBPeripheral and CBPeripheralDelegate (discoverServices, discoverCharacteristics, readValue, writeValue, setNotifyValue)
+    - CBCentralManagerDelegate methods (didDiscover, didConnect, didFailToConnect, didDisconnectPeripheral)
+    - CBPeripheralManager (peripheral role), CBPeripheralManagerDelegate (didReceiveRead/didReceiveWrite, central subscribed/unsubscribed)
+    - CBMutableService, CBMutableCharacteristic, CBUUID, CBATTRequest
+    - State restoration keys (CBCentralManagerOptionRestoreIdentifierKey / CBPeripheralManagerOptionRestoreIdentifierKey)
+    - L2CAP channel APIs introduced in recent OS versions (iOS 11+/macOS 10.14+) where available
+  - Responsibilities: scanning/connecting, GATT server/advertising for peripheral role, handling read/write requests, notifications, L2CAP when supported, iOS state restoration for background operation.
+  - Notes: include NSBluetoothAlwaysUsageDescription, NSBluetoothPeripheralUsageDescription and UIBackgroundModes for background restores.
 
-- Windows (C++ / WinRT)
-  - Core APIs: Windows.Devices.Bluetooth, BluetoothLEDevice, GattCharacteristic, GattServiceProvider
-  - Responsibilities: central operations using WinRT BLE; limited peripheral support depending on Windows APIs and versions.
+- Windows (WinRT / UWP)
+  - WinRT BLE APIs used:
+    - Windows.Devices.Bluetooth.BluetoothLEAdvertisementWatcher (scanning)
+    - Windows.Devices.Bluetooth.BluetoothLEDevice (device connection)
+    - Windows.Devices.Bluetooth.GenericAttributeProfile.GattDeviceService, GattCharacteristic, GattCharacteristic.ValueChanged
+    - Windows.Devices.Bluetooth.Advertisement.BluetoothLEAdvertisementPublisher (advertising)
+    - GattServiceProvider for hosting GATT services (peripheral support where available)
+    - APIs for pairing and device access via DeviceInformation.Pairing
+  - Responsibilities: central operations, GATT read/write/notify, limited peripheral support depending on Windows version and APIs.
 
-- Linux (BlueZ D-Bus)
-  - Core APIs: BlueZ D-Bus interface (org.bluez)
-  - Responsibilities: central operations via D-Bus; limited peripheral/L2CAP support depending on BlueZ and distro configuration. Requires bluez installed and appropriate permissions.
+- Linux (BlueZ via D-Bus)
+  - BlueZ D-Bus interfaces used:
+    - org.bluez.Adapter1 (StartDiscovery/StopDiscovery)
+    - org.bluez.Device1 (Connect, Disconnect, RSSI, GATT-related properties)
+    - org.bluez.GattManager1 / org.bluez.GattService1 / org.bluez.GattCharacteristic1 (registering services, handling ReadValue/WriteValue/StartNotify)
+    - org.bluez.LEAdvertisingManager1 / org.bluez.LEAdvertisement1 (advertising)
+  - Responsibilities: central operations via D-Bus; optional peripheral/advertising support when LEAdvertisingManager is available. Requires bluez daemon and appropriate D-Bus permissions.
 
 - Web (Web Bluetooth API)
-  - Core APIs: navigator.bluetooth.requestDevice(), BluetoothRemoteGATTServer, BluetoothRemoteGATTCharacteristic
-  - Responsibilities: central-only (device picker), GATT interactions via browser APIs. Requires HTTPS and user gesture; not supported on all browsers.
+  - Web APIs used:
+    - navigator.bluetooth.requestDevice({filters, optionalServices})
+    - BluetoothDevice.gatt.connect()
+    - BluetoothRemoteGATTServer, BluetoothRemoteGATTService, BluetoothRemoteGATTCharacteristic
+    - characteristic.readValue(), characteristic.writeValue(), characteristic.startNotifications(), characteristic.oncharacteristicvaluechanged
+    - navigator.bluetooth.requestLEScan (experimental; availability varies by browser)
+  - Responsibilities: central-only scanning via device picker, GATT interactions through browser APIs. Requires HTTPS and a user gesture to open the device picker (Chrome/Edge supported).
 
 How it works (architecture & runtime flow)
 1. App calls into the public Dart API (BleCentral/BlePeripheral).

@@ -251,6 +251,96 @@ flutter test
 ```
 - Follow the repo's contribution guidelines and add meaningful dartdocs when touching public APIs.
 
+Native implementation examples & docs
+
+This section shows minimal native snippets and official documentation links for each platform, useful for maintainers implementing or debugging the platform-side code.
+
+- Android (Kotlin) — key classes: BluetoothManager, BluetoothAdapter, BluetoothLeScanner, BluetoothGatt, BluetoothGattServer, AdvertiseSettings.
+
+Kotlin scan snippet:
+
+```kotlin
+val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+val adapter = bluetoothManager.adapter
+val scanner = adapter.bluetoothLeScanner
+val scanCallback = object : ScanCallback() {
+  override fun onScanResult(callbackType: Int, result: ScanResult) {
+    // handle scan result
+  }
+}
+val filters = listOf(ScanFilter.Builder().setServiceUuid(ParcelUuid(UUID.fromString("0000180D-0000-1000-8000-00805f9b34fb"))).build())
+val settings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
+scanner.startScan(filters, settings, scanCallback)
+```
+
+Docs: https://developer.android.com/guide/topics/connectivity/bluetooth
+
+- iOS / macOS (Swift — CoreBluetooth) — key classes: CBCentralManager, CBPeripheral, CBPeripheralManager, CBMutableService, CBMutableCharacteristic.
+
+Swift scan snippet:
+
+```swift
+let central = CBCentralManager(delegate: self, queue: nil)
+central.scanForPeripherals(withServices: [CBUUID(string: "180D")], options: nil)
+
+// implement CBCentralManagerDelegate methods: didDiscover, didConnect, didFailToConnect, didDisconnectPeripheral
+```
+
+Docs: https://developer.apple.com/documentation/corebluetooth
+
+- Windows (WinRT/UWP) — key APIs: BluetoothLEAdvertisementWatcher, BluetoothLEDevice, GattDeviceService, GattCharacteristic.
+
+C# (UWP) scan snippet:
+
+```csharp
+var watcher = new BluetoothLEAdvertisementWatcher();
+watcher.Received += (sender, args) => {
+  // args contains advertisement data
+};
+watcher.Start();
+```
+
+Docs: https://learn.microsoft.com/windows/uwp/devices-sensors/gatt-client
+
+- Linux (BlueZ via D-Bus) — key interfaces: org.bluez.Adapter1, org.bluez.Device1, org.bluez.GattManager1, org.bluez.GattCharacteristic1.
+
+Command-line / shell example (quick test):
+
+```bash
+# Use bluetoothctl for quick manual testing
+bluetoothctl
+# in bluetoothctl: scan on
+# watch for discovery events
+```
+
+Python + pydbus minimal pattern:
+
+```python
+from pydbus import SystemBus
+bus = SystemBus()
+adapter = bus.get('org.bluez', '/org/bluez/hci0')
+adapter.StartDiscovery()
+```
+
+Docs and BlueZ D-Bus references: https://git.kernel.org/pub/scm/bluetooth/bluez.git/tree/doc
+
+- Web (Web Bluetooth API) — key APIs: navigator.bluetooth.requestDevice, BluetoothRemoteGATTServer, BluetoothRemoteGATTCharacteristic.
+
+JavaScript snippet:
+
+```javascript
+const device = await navigator.bluetooth.requestDevice({ filters: [{ services: ['heart_rate'] }] });
+const server = await device.gatt.connect();
+const service = await server.getPrimaryService('heart_rate');
+const char = await service.getCharacteristic('heart_rate_measurement');
+await char.startNotifications();
+char.addEventListener('characteristicvaluechanged', (evt) => {
+  // parse evt.target.value
+});
+```
+
+Docs: https://web.dev/bluetooth/ and https://developer.mozilla.org/en-US/docs/Web/API/Web_Bluetooth_API
+
 Flowcharts
 
 ## Expert flow (/expert)

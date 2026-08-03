@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="500" viewBox="0 0 900 500">
+  <style>
+    .box{fill:#ffffff;stroke:#0b1221;stroke-width:2;}
+    .label{font:14px Arial; fill:#0b1221}
+    .title{font:16px Arial; font-weight:700}
+    .arrow{stroke:#0b1221;stroke-width:2;fill:none;marker-end:url(#a)}
+  </style>
+  <defs>
+    <marker id="a" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#0b1221" />
+    </marker>
+  </defs>
+  <text x="20" y="30" class="title">ble_plus — Technical Flow</text>
+  <rect x="30" y="60" width="200" height="60" class="box" rx="6"/>
+  <text x="80" y="95" class="label">App</text>
+  <rect x="320" y="40" width="230" height="100" class="box" rx="6"/>
+  <text x="370" y="70" class="label">Dart API\n(BleCentral / BlePeripheral)</text>
+  <rect x="640" y="60" width="220" height="60" class="box" rx="6"/>
+  <text x="700" y="95" class="label">Platform Impl</text>
+
+  <path d="M230 90 L320 90" class="arrow" />
+  <path d="M550 90 L640 90" class="arrow" />
+
+  <rect x="320" y="180" width="540" height="220" class="box" rx="6"/>
+  <text x="360" y="210" class="label">Android / iOS / macOS / Windows / Linux / Web</text>
+  <text x="360" y="235" class="label">Native BLE stacks: BluetoothGatt, CoreBluetooth, WinRT, BlueZ, Web Bluetooth</text>
+
+  <text x="30" y="460" class="label">Simplified: App → Dart API → Platform implementation → Native</text>
+</svg>

@@ -147,6 +147,24 @@ flutter test
 ```
 - Follow the repo's contribution guidelines and add meaningful dartdocs when touching public APIs.
 
+Flowcharts
+
+## Expert flow (/expert)
+
+![Expert flowchart](assets/flowchart_expert.svg)
+
+The expert diagram shows the full architecture and data/control paths:
+- App UI and business logic invoke the Dart public API (BleCentral/BlePeripheral).
+- Public API forwards calls to the platform interface (contracts, types) and exposes reactive streams for scans, connections, characteristics, bond state, MTU, and L2CAP channels.
+- Platform implementations (Android/iOS/macOS/Windows/Linux/Web) map the platform interface to native stacks (BluetoothGatt, CoreBluetooth, WinRT, BlueZ, Web Bluetooth).
+- L2CAP channels and background/foreground behavior are highlighted: iOS state-restoration and Android foreground services.
+
+## Technical flow (/technical)
+
+![Technical flowchart](assets/flowchart_technical.svg)
+
+A simplified flow for onboarding new integrators: App → Dart API → Platform implementation → Native BLE stack. This view focuses on call/response and payload flow rather than event stream minutiae.
+
 License
 BSD-3-Clause. See LICENSE.
 

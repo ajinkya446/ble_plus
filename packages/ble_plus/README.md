@@ -129,6 +129,21 @@ API highlights
 - BlePeripheral: addService(), removeService(), startAdvertising(), stopAdvertising(), onCentralConnected, onReadRequest, notifyCharacteristic(), publishL2CapChannel()
 - AdvertiseSettings, GattServiceDefinition, GattCharacteristicDefinition, CharacteristicProperties, CharacteristicPermissions
 
+API usage & documentation
+- API reference online: https://pub.dev/documentation/ble_plus/latest/
+- Example code: see packages/ble_plus/example and example/ for runnable sample apps demonstrating Central and Peripheral flows.
+- Key usage patterns:
+  - Scanning: central.startScan(withServices: [...]).listen((result) { ... });
+  - Connecting: final conn = await central.connect(device);
+  - Read/Write: await conn.readCharacteristic(characteristic); await conn.writeCharacteristic(characteristic, [0x01]);
+  - Notifications: conn.subscribeToCharacteristic(char).listen((data) { ... });
+  - Peripheral: peripheral.addService(...); await peripheral.startAdvertising(settings);
+
+Generate docs locally
+- Ensure dependencies: flutter pub get
+- Generate API docs: dart doc --output-dir=doc/api (or use dartdoc if preferred)
+- View generated docs at doc/api/index.html
+
 APIs used & platform mapping
 This package provides a single Dart API surface that delegates to platform-specific implementations via the platform interface (ble_plus_platform_interface). Each platform implementation maps the high-level operations to native OS BLE APIs:
 

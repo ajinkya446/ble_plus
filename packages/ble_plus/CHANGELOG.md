@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.1 - 2026-08-03
+
+- Patch release: metadata and documentation improvements aimed at reaching full pub.dev score.
+- Added Swift Package Manager support for iOS and macOS (Package.swift files).
+- Enabled public_member_api_docs lint and added initial dartdoc stubs to improve documentation coverage.
+- Updated package metadata (homepage, repository, issue tracker) and topics.
+- Minor build configuration cleanup for Android Kotlin warnings.
+
 ## 1.0.0
 
 - Initial release

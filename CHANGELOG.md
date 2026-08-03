@@ -1,3 +1,11 @@
+## 1.0.1 - 2026-08-03
+
+- Patch release to prepare for pub.dev scoring improvements.
+- Added SPM Package.swift files for iOS/macOS to support Swift Package Manager integration.
+- Enabled public_member_api_docs lint and added initial dartdoc stubs across the public API to improve documentation coverage.
+- Updated package metadata (homepage, repository, issue tracker) and topics to point to the canonical repository.
+- Minor Android build script adjustments to reduce legacy Kotlin warnings.
+
 ## 1.0.0
 
 **Initial release** — August 3, 2026

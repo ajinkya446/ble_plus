@@ -1,7 +1,10 @@
 name: ble_plus
-description: "A production-ready Flutter BLE plugin supporting Central and Peripheral roles, L2CAP, background operation, and connection parameters."
+description: A Flutter plugin for Bluetooth Low Energy.
 version: 1.0.0
-homepage: https://github.com/your-org/ble_plus
+homepage: https://github.com/ajinkya446/ble_plus
+repository: https://github.com/ajinkya446/ble_plus
+issue_tracker: https://github.com/ajinkya446/ble_plus/issues
+
 topics:
   - ble
   - bluetooth
@@ -18,7 +21,7 @@ dependencies:
   flutter_web_plugins:
     sdk: flutter
   plugin_platform_interface: ^2.0.2
-  
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

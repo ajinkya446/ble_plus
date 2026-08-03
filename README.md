@@ -378,7 +378,3 @@ windows/   # C++ (WinRT BLE)
 | No macOS (community fork) | ✅ Native CoreBluetooth implementation |
 | No background mode architecture | ✅ iOS restoration + Android FGS |
 | Hard to test/mock | ✅ Platform interface pattern, DI via logger |
-
-## License
-
-BSD-3-Clause

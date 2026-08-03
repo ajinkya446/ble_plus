@@ -1,7 +1,7 @@
 name: ble_plus_platform_interface
-description: Platform interface for ble_plus (internal reference only).
+description: Platform interface package for ble_plus: shared types and platform contracts used by the plugin implementations across Android, iOS, macOS, Linux, Windows and Web.
 version: 0.0.1
-publish_to: 'none'
+
 
 environment:
   sdk: ^3.11.0

@@ -1,3 +1,6 @@
+## 1.0.3 -2026-08-05
+- Patch release to prepare the links and documentation improvement
+
 ## 1.0.1 - 2026-08-03
 
 - Patch release to prepare for pub.dev scoring improvements.

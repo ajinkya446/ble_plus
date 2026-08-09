@@ -1,6 +1,8 @@
 name: ble_plus_ios_unused
 description: Unused - see root package.
-version: 1.0.3
+version: 1.0.4
+repository: https://github.com/ajinkya446/ble_plus
+repository_name: ajinkya446/ble_plus
 publish_to: 'none'
 
 environment:

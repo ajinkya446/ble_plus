@@ -9,7 +9,7 @@ A production-ready Flutter BLE plugin with **Central** and **Peripheral** roles 
 - **Central Mode**: Scan, connect, discover services, read/write/notify characteristics
 - **Peripheral Mode**: Advertise, GATT server, handle read/write requests, send notifications
 - **L2CAP Channels**: High-throughput data streaming (iOS 11+, Android 10+, macOS 10.14+)
-- **Background Support**: iOS state restoration, Android foreground service
+- **Background Support**: iOS state restoration, Android foreground service, Windows tray (hide to tray on close)
 - **Connection Parameters**: Request/inspect connection intervals
 - **Descriptor R/W**: Read and write characteristic descriptors
 - **Unified Error Handling**: Sealed `BleError` hierarchy with platform error codes
@@ -31,14 +31,15 @@ A production-ready Flutter BLE plugin with **Central** and **Peripheral** roles 
 | **Peripheral: GATT Server** | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
 | **Peripheral: Notifications** | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
 | **L2CAP Channels** | ✅² | ✅³ | ✅⁴ | ❌ | ❌ | ❌ |
-| **Background Mode** | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **Background Mode** | ✅ | ✅ | ❌ | ❌ | ❌ | ✅⁶ |
 | **Bond/Pair Management** | ✅ | Auto | Auto | ❌ | ✅ | ✅⁵ |
 
 > ¹ Web scanning uses a device picker dialog (requires user gesture + HTTPS). Chrome/Edge only.  
 > ² Android L2CAP requires API 29+ (Android 10).  
 > ³ iOS L2CAP requires iOS 11+.  
 > ⁴ macOS L2CAP requires macOS 10.14+.  
-> ⁵ Windows: `getBondState()` supported; `removeBond()` not available.
+> ⁵ Windows: `getBondState()` supported; `removeBond()` not available.  
+> ⁶ Windows: hides to the tray on close; requires `enableBackground` (the example runner implements it via the `ble_plus/runner_background` channel).
 
 ## Platform-Specific Limitations
 
@@ -59,8 +60,9 @@ A production-ready Flutter BLE plugin with **Central** and **Peripheral** roles 
 ### Windows
 - **Central role only** — no peripheral or L2CAP support
 - Uses WinRT BLE APIs — requires **Windows 10** or later
-- No RSSI read, descriptor R/W, or background support
+- No RSSI read, descriptor R/W, or L2CAP support
 - MTU is auto-negotiated by the OS
+- Background support: with `enableBackground`, closing the window hides it to the system tray instead of terminating the process (BLE keeps running). The example runner implements this via the `ble_plus/runner_background` channel.
 
 ### iOS / macOS
 - **MTU is auto-negotiated** — `requestMtu()` returns current value but cannot set it
@@ -196,6 +198,9 @@ await central.enableBackground(
 central.restoredDevices.listen((devices) {
   print('Restored ${devices.length} devices');
 });
+
+// Note: on Windows, enableBackground() activates the runner's tray
+// background mode (hide to tray on close instead of terminating).
 
 // ── Platform Capabilities ──────────────────────────────────
 // Check what the current platform supports before using features
@@ -376,5 +381,5 @@ windows/   # C++ (WinRT BLE)
 | No real-time connection state | ✅ `isConnected`, `connectionState`, `stateStream` |
 | No Web/Linux/Windows | ✅ All 6 platforms supported |
 | No macOS (community fork) | ✅ Native CoreBluetooth implementation |
-| No background mode architecture | ✅ iOS restoration + Android FGS |
+| No background mode architecture | ✅ iOS restoration + Android FGS + Windows tray |
 | Hard to test/mock | ✅ Platform interface pattern, DI via logger |

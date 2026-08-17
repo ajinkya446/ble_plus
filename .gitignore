@@ -1,0 +1,25 @@
+# Dart/Flutter tooling
+.dart_tool/
+.packages
+.pub/
+/pubspec.lock
+build/
+coverage/
+
+# Gradle caches (dead packages/ layout)
+packages/**/.gradle/
+
+# Session working notes (never commit these)
+RESUME.md
+CHANGES.md
+windows_fix_progress.md
+windows/WINDOWS_IMPROVEMENTS.md
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db

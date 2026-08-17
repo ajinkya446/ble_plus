@@ -1,19 +1,30 @@
 import 'dart:async';
 
+import 'package:flutter/services.dart';
+
 import 'platform/ble_plus_platform.dart';
 import 'platform/types/types.dart';
 import 'platform/events/events.dart';
 import 'ble_connection.dart';
 import 'ble_logger.dart';
 import 'errors/ble_errors.dart';
+import 'errors/error_mapper.dart';
 import 'models/models.dart';
 
 /// The BLE Central role manager.
 class BleCentral {
   final BleLogger _logger;
   BlePlusPlatform get _platform => BlePlusPlatform.instance;
+  StreamSubscription<BleLogEntry>? _nativeLogSub;
 
-  BleCentral({BleLogger? logger}) : _logger = logger ?? BleLogger();
+  BleCentral({BleLogger? logger}) : _logger = logger ?? BleLogger() {
+    // Relay the native plugin's diagnostic logs (Windows) to the user's logger
+    // so scan/connect/discover/GATT steps can be watched live. On platforms
+    // that emit no native logs the stream is Stream.empty() and this is a no-op.
+    _nativeLogSub = _platform.nativeLogStream.listen((entry) {
+      _logger.log(entry.level, 'native/${entry.tag}', entry.message);
+    });
+  }
 
   // ─── Adapter State ───────────────────────────────────────
   Stream<BleAdapterState> get adapterState => _platform.adapterStateStream;
@@ -105,7 +116,11 @@ class BleCentral {
         })
         .first;
 
-    await _platform.connect(device.id, settings);
+    try {
+      await _platform.connect(device.id, settings);
+    } on PlatformException catch (e) {
+      throw mapPlatformException(e);
+    }
 
     final event = await eventFuture;
 
@@ -148,6 +163,8 @@ class BleCentral {
       _platform.restoredDeviceIdsStream.map((ids) => ids.map((id) => BleDevice(id: id)).toList());
 
   Future<void> dispose() async {
+    await _nativeLogSub?.cancel();
+    _nativeLogSub = null;
     await stopScan();
     await _platform.dispose();
   }

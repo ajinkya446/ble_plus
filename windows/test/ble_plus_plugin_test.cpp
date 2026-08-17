@@ -5,6 +5,7 @@
 #include <windows.h>
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <variant>
 
@@ -22,21 +23,38 @@ using flutter::MethodResultFunctions;
 
 }  // namespace
 
-TEST(BlePlusPlugin, GetPlatformVersion) {
+// An unknown method must respond NotImplemented (the BLE plugin does not
+// handle "getPlatformVersion", the method of the original flutter create
+// template).
+TEST(BlePlusPlugin, UnknownMethodReturnsNotImplemented) {
   BlePlusPlugin plugin;
-  // Save the reply value from the success callback.
-  std::string result_string;
+  bool not_implemented = false;
   plugin.HandleMethodCall(
-      MethodCall("getPlatformVersion", std::make_unique<EncodableValue>()),
+      MethodCall("noSuchMethod", std::make_unique<EncodableValue>()),
       std::make_unique<MethodResultFunctions<>>(
-          [&result_string](const EncodableValue* result) {
-            result_string = std::get<std::string>(*result);
-          },
-          nullptr, nullptr));
+          /*success*/ nullptr,
+          /*error*/ nullptr,
+          /*notImplemented*/ [&not_implemented]() { not_implemented = true; }));
+  EXPECT_TRUE(not_implemented);
+}
 
-  // Since the exact string varies by host, just ensure that it's a string
-  // with the expected format.
-  EXPECT_TRUE(result_string.rfind("Windows ", 0) == 0);
+// getBondState of a never-connected device must respond 0 (none) synchronously,
+// without errors or inconsistent state.
+TEST(BlePlusPlugin, GetBondStateUnknownDeviceReturnsNone) {
+  BlePlusPlugin plugin;
+  std::optional<int32_t> value;
+  EncodableMap args;
+  args[EncodableValue("deviceId")] = EncodableValue("AA:BB:CC:DD:EE:FF");
+  plugin.HandleMethodCall(
+      MethodCall("getBondState", std::make_unique<EncodableValue>(args)),
+      std::make_unique<MethodResultFunctions<>>(
+          [&value](const EncodableValue* result) {
+            value = std::get<int32_t>(*result);
+          },
+          /*error*/ nullptr,
+          /*notImplemented*/ nullptr));
+  ASSERT_TRUE(value.has_value());
+  EXPECT_EQ(*value, 0);
 }
 
 }  // namespace test

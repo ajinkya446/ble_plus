@@ -40,7 +40,7 @@ ble_plus/                          # Package root (name: ble_plus, version: 1.0.
 │           ├── method_channel_ble_plus.dart  # Android / iOS / macOS implementation
 │           ├── ble_plus_web.dart             # Web Bluetooth (dart:js_interop)
 │           ├── ble_plus_linux.dart           # Linux facade (dartPluginClass)
-│           ├── ble_plus_windows.dart         # Windows Dart facade (not wired in pubspec)
+│           ├── ble_plus_windows.dart         # Windows Dart facade (dartPluginClass)
 │           ├── events/           # Event channel data types (scan, connection, characteristic, bond, l2cap, mtu, peripheral)
 │           └── types/            # Shared data types + PlatformCapabilities, Guid, settings
 ├── android/                       # Kotlin: BlePlusPlugin.kt, PeripheralManager.kt (+ JUnit test)
@@ -174,7 +174,7 @@ The original plan (v1 of this document) was a **federated monorepo**: an app-fac
 
 - One `pubspec.yaml`, one version, one publish target.
 - The platform interface, all Dart implementations, and all native code live in the root package.
-- Remaining traces of the federated attempt — `melos.yaml`, `packages/`, `lib/ble_plus_web.dart`, `lib/ble_plus_platform_interface.dart`, `lib/ble_plus_windows.dart` — are leftovers: deprecated, excluded from analysis, and not part of the shipped API.
+- Remaining traces of the federated attempt — `melos.yaml`, `packages/`, `lib/ble_plus_web.dart`, `lib/ble_plus_platform_interface.dart` — are leftovers: deprecated, excluded from analysis, and not part of the shipped API. (Note: `lib/ble_plus_windows.dart` is **not** a leftover — the live Windows facade lives in `lib/src/platform/ble_plus_windows.dart` and is wired via `dartPluginClass: BlePlusWindows`.)
 
 What *survived* from the original design largely unchanged:
 

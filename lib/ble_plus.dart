@@ -19,10 +19,10 @@
 /// import 'package:ble_plus/ble_plus.dart';
 ///
 /// // Scan for BLE devices
-/// final central = BleCentral.instance;
+/// final central = BleCentral();
 /// central.startScan();
 /// ```
-library ble_plus;
+library;
 
 // Platform interface
 // App-facing API

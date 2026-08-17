@@ -1,5 +1,11 @@
 #include "flutter_window.h"
 
+#include <flutter/encodable_value.h>
+#include <flutter/method_call.h>
+#include <flutter/method_result_functions.h>
+#include <flutter/standard_method_codec.h>
+
+#include <memory>
 #include <optional>
 
 #include "flutter/generated_plugin_registrant.h"
@@ -26,6 +32,27 @@ bool FlutterWindow::OnCreate() {
   }
   RegisterPlugins(flutter_controller_->engine());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
+
+  // Channel for the plugin (BlePlusWindows.enableBackground/disableBackground)
+  // to control the runner background mode (hide to tray on close). The name
+  // "ble_plus/runner_background" is invoked by the package on Windows.
+  background_channel_ =
+      std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+          flutter_controller_->engine()->messenger(),
+          "ble_plus/runner_background",
+          &flutter::StandardMethodCodec::GetInstance());
+  background_channel_->SetMethodCallHandler(
+      [this](const flutter::MethodCall<flutter::EncodableValue>& call,
+             std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>>
+                 result) {
+        if (call.method_name() == "setBackgroundMode") {
+          const auto* enabled = std::get_if<bool>(call.arguments());
+          SetBackgroundMode(enabled != nullptr && *enabled);
+          result->Success();
+        } else {
+          result->NotImplemented();
+        }
+      });
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
     this->Show();

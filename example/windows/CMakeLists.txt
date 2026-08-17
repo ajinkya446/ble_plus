@@ -108,3 +108,47 @@ install(DIRECTORY "${PROJECT_BUILD_DIR}/${FLUTTER_ASSET_DIR_NAME}"
 install(FILES "${AOT_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_DATA_DIR}"
   CONFIGURATIONS Profile;Release
   COMPONENT Runtime)
+
+# === Tray icon tests (runner) ===
+# Automated tests of the runner's background / tray icon behavior
+# (example/windows/test/tray_icon_test.cpp). Built together with the plugin
+# tests (include_ble_plus_tests = TRUE).
+if(${include_ble_plus_tests})
+  set(TRAY_TEST_RUNNER "ble_plus_tray_test")
+
+  # googletest is already declared by the plugin (same URL): FetchContent
+  # reuses it without downloading again.
+  include(FetchContent)
+  FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/archive/v1.14.0.zip
+  )
+  set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+  set(INSTALL_GTEST OFF CACHE BOOL "Disable installation of googletest" FORCE)
+  FetchContent_MakeAvailable(googletest)
+
+  add_executable(${TRAY_TEST_RUNNER}
+    "test/tray_icon_test.cpp"
+    "runner/win32_window.cpp"
+  )
+  apply_standard_settings(${TRAY_TEST_RUNNER})
+  # Avoids Windows min/max macros colliding with the STL (like the runner).
+  target_compile_definitions(${TRAY_TEST_RUNNER} PRIVATE "NOMINMAX")
+  target_include_directories(${TRAY_TEST_RUNNER} PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/runner"
+  )
+  target_link_libraries(${TRAY_TEST_RUNNER} PRIVATE flutter)
+  target_link_libraries(${TRAY_TEST_RUNNER} PRIVATE gtest_main gmock)
+  # dwmapi (UpdateTheme), shell32 (Shell_NotifyIcon).
+  target_link_libraries(${TRAY_TEST_RUNNER} PRIVATE "dwmapi.lib" "shell32.lib")
+  # flutter_windows.dll debe estar junto al exe de test (FlutterDesktopGetDpi...).
+  add_custom_command(TARGET ${TRAY_TEST_RUNNER} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${FLUTTER_LIBRARY}" $<TARGET_FILE_DIR:${TRAY_TEST_RUNNER}>
+  )
+  add_dependencies(${TRAY_TEST_RUNNER} flutter_assemble)
+
+  include(GoogleTest)
+  gtest_discover_tests(${TRAY_TEST_RUNNER})
+endif()

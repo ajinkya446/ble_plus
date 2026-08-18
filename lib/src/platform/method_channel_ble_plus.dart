@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/services.dart';
 import '../platform/ble_plus_platform.dart';
 import '../platform/types/types.dart';
@@ -19,16 +20,22 @@ class MethodChannelBlePlus extends BlePlusPlatform {
   }
 
   @override
-  PlatformCapabilities get capabilities => const PlatformCapabilities(
-    centralRole: true,
-    peripheralRole: true,
-    l2cap: true,
-    backgroundCentral: true,
-    backgroundPeripheral: true,
-    connectionParameters: true,
-    requestMtu: true,
-    bondManagement: false,
-  );
+  PlatformCapabilities get capabilities {
+    // Android/iOS/macOS share this Dart facade but the native Android plugin
+    // does not implement L2CAP, and iOS/macOS cannot request MTU or manage
+    // bonding (both auto-negotiated by the OS). Report each honestly.
+    final isAndroid = defaultTargetPlatform == TargetPlatform.android;
+    return PlatformCapabilities(
+      centralRole: true,
+      peripheralRole: true,
+      l2cap: !isAndroid,
+      backgroundCentral: false,
+      backgroundPeripheral: false,
+      connectionParameters: false,
+      requestMtu: isAndroid,
+      bondManagement: isAndroid,
+    );
+  }
 
   // ── Adapter ──────────────────────────────────────────────
   @override

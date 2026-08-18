@@ -31,7 +31,7 @@ class BlePlusLinux extends BlePlusPlatform {
         backgroundPeripheral: false,
         connectionParameters: false,
         requestMtu: false,
-        bondManagement: true,
+        bondManagement: false,
       );
 
   // ── Adapter ──────────────────────────────────────────────

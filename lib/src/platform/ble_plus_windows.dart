@@ -41,7 +41,7 @@ class BlePlusWindows extends BlePlusPlatform {
         backgroundPeripheral: false,
         connectionParameters: false,
         requestMtu: true,
-        bondManagement: true,
+        bondManagement: false,
       );
 
   // ── Adapter ──────────────────────────────────────────────

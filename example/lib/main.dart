@@ -253,9 +253,12 @@ class _ScanPageState extends State<ScanPage> {
   @override
   void initState() {
     super.initState();
-    // Enable background mode on Windows: the runner will hide the window to
-    // the tray on close and BLE keeps running (see BlePlusWindows).
-    _central.enableBackground();
+    // Enable background mode on platforms that support it (Windows: the runner
+    // hides the window to the tray on close and BLE keeps running). Mobile
+    // (Android/iOS/macOS) reports backgroundCentral=false: no-op, no FGS.
+    if (_central.capabilities.backgroundCentral) {
+      _central.enableBackground();
+    }
   }
 
   @override

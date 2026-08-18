@@ -21,9 +21,9 @@ class MethodChannelBlePlus extends BlePlusPlatform {
 
   @override
   PlatformCapabilities get capabilities {
-    // Android/iOS/macOS comparten esta fachada Dart, pero el plugin nativo de
-    // Android no implementa L2CAP, y en iOS/macOS el MTU y el bonding se
-    // negocian automáticamente por el sistema. Reportar cada uno con honestidad.
+    // Android/iOS/macOS share this Dart facade but the native Android plugin
+    // does not implement L2CAP, and iOS/macOS cannot request MTU or manage
+    // bonding (both auto-negotiated by the OS). Report each honestly.
     final isAndroid = defaultTargetPlatform == TargetPlatform.android;
     return PlatformCapabilities(
       centralRole: true,

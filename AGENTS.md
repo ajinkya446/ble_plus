@@ -26,16 +26,18 @@ Single-package Flutter BLE plugin (`ble_plus` v1.0.5). The repo root IS the pack
 
 - Barrel export `lib/ble_plus.dart`. Public API: `BleCentral`, `BlePeripheral`, `BleConnection`, `BleL2capChannel`, `BleLogger`, sealed `BleError` hierarchy.
 - Everything routes through `BlePlusPlatform extends PlatformInterface`; the default instance is `MethodChannelBlePlus` (backed by Android/iOS/macOS native code). Web (`BlePlusWeb`) and Linux (`BlePlusLinux`) register from Dart in `lib/src/platform/`; Windows is native C++/WinRT in `windows/`.
-- Instance-based API, no global singleton: `BleCentral({BleLogger? logger})`. Note `lib/ble_plus.dart`'s doc comment still shows a stale `BleCentral.instance` — actual usage is `BleCentral()`.
+- Instance-based API, no global singleton: `BleCentral({BleLogger? logger})`.
 - Gate features on `BleCentral.capabilities` (`PlatformCapabilities`) before using peripheral role / L2CAP / background.
 
 ## Platform reality
 
-- Peripheral role: Android, iOS, macOS only. L2CAP: Android 10+ / iOS 11+ / macOS 10.14+. Background: Android/iOS (mobile OS mechanism: foreground service / restoration); Windows reports `backgroundCentral: true` and `enableBackground`/`disableBackground` activate the runner background mode (hide to tray on close via the `ble_plus/runner_background` channel — see `example/windows/runner/win32_window.cpp` and `example/windows/test/tray_icon_test.cpp`).
+- Peripheral role: Android, iOS, macOS only. L2CAP: iOS 11+ / macOS 10.14+ only — the Android native plugin has **no L2CAP** (leftover stubs only in `packages/`). Background: mobile background mode (foreground service / state restoration) is **NOT implemented** — `MethodChannelBlePlus` reports `backgroundCentral: false`/`backgroundPeripheral: false` and `enableBackground` is a no-op there. Windows reports `backgroundCentral: true` and `enableBackground`/`disableBackground` activate the runner background mode (hide to tray on close via the `ble_plus/runner_background` channel — see `example/windows/runner/win32_window.cpp` and `example/windows/test/tray_icon_test.cpp`).
+- `MethodChannelBlePlus` capabilities are platform-aware via `defaultTargetPlatform`: `l2cap: !android`, `requestMtu: android`, `bondManagement: android`, `connectionParameters: false` everywhere. `BleUnsupportedError` surfaces for `openL2CapChannel`/`publishL2CapChannel`/`requestConnectionParameters` where unsupported.
+- Android: no descriptor R/W, no L2CAP, no connection params in the native plugin (`BlePlusPlugin.kt`); bond implemented (`createBond`/`removeBond`/`getBondState`).
+- iOS/macOS: descriptor R/W and L2CAP implemented; connection params **not implemented** (not even read-only); MTU auto-negotiated; bond OS-managed.
 - Web: central only; HTTPS + user gesture; Chrome/Edge only; scanning requires service-UUID filters.
-- Linux: central only; requires BlueZ; no L2CAP/peripheral/MTU/RSSI.
-- Windows: central only; Windows 10+; no peripheral/L2CAP/RSSI. Background: the app does not suspend when minimized/hidden (tray icon in the example runner).
-- iOS/macOS: MTU auto-negotiated; connection params read-only.
+- Linux: central only; requires BlueZ; no L2CAP/peripheral/MTU/RSSI/descriptors/bond.
+- Windows: central only; Windows 10+; no peripheral/L2CAP/RSSI/descriptors. Bond: native C++ handlers exist (`ble_plus_plugin.cpp`) but the Dart facade (`ble_plus_windows.dart`) never calls them → silent no-op. Background: the app does not suspend when minimized/hidden (tray icon in the example runner).
 
 ## Test quirk
 

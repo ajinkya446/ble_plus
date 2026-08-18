@@ -24,7 +24,7 @@ Demonstrates all features of the `ble_plus` plugin across all supported platform
 - Shows current platform name and all `PlatformCapabilities` flags
 - Displays platform-specific limitations:
   - **Android**: Permission requirements, L2CAP API level
-  - **iOS**: Auto-negotiated MTU, read-only connection parameters
+  - **iOS**: Auto-negotiated MTU, connection parameters not implemented
   - **macOS**: Bluetooth entitlement, no background
   - **Web**: Device picker, HTTPS requirement, Chrome/Edge only
   - **Linux**: BlueZ requirement, Central only

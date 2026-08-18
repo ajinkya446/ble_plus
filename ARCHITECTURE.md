@@ -96,34 +96,39 @@ Channel layout (shared names across native platforms):
 | Feature | Android | iOS | macOS | Web | Linux | Windows |
 |---------|:-------:|:---:|:-----:|:---:|:-----:|:-------:|
 | Central: Scan / Connect / GATT R/W / Notify | ✅ | ✅ | ✅ | ✅¹ | ✅ | ✅ |
-| Central: Descriptors | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Central: Descriptors | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
 | Central: MTU Request | ✅ | Auto | Auto | Auto | ❌ | Auto |
 | Central: Read RSSI | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Central: Connection Params | ✅ | Read-only | Read-only | ❌ | ❌ | ❌ |
+| Central: Connection Params | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Peripheral: Advertise / GATT Server / Notify | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| L2CAP Channels | ✅² | ✅³ | ✅⁴ | ❌ | ❌ | ❌ |
-| Background Mode | ✅ | ✅ | ❌ | ❌ | ❌ | ✅⁶ |
-| Bond / Pair Management | ✅ | Auto | Auto | ❌ | ✅ | ✅⁵ |
+| L2CAP Channels | ❌ | ✅² | ✅³ | ❌ | ❌ | ❌ |
+| Background Mode | ❌ | ❌ | ❌ | ❌ | ❌ | ✅⁴ |
+| Bond / Pair Management | ✅ | Auto | Auto | ❌ | ❌ | ❌ |
 
 > ¹ Web scanning shows a device-picker dialog (user gesture + HTTPS, Chrome/Edge only) and requires service-UUID filters.  
-> ² Android L2CAP requires API 29+. ³ iOS 11+. ⁴ macOS 10.14+.  
-> ⁵ Windows: `getBondState()` only; no `removeBond()`.  
-> ⁶ Windows: `enableBackground`/`disableBackground` activate the runner's tray background mode (hide to tray on close via the `ble_plus/runner_background` channel).
+> ² iOS L2CAP requires iOS 11+. ³ macOS 10.14+.  
+> ⁴ Windows: `enableBackground`/`disableBackground` activate the runner's tray background mode (hide to tray on close via the `ble_plus/runner_background` channel).
+
+> **Honest status notes** — the ✅/❌ above reflect what the code actually implements today:
+> - **Android**: L2CAP, descriptor R/W and connection parameters are **not implemented** in the native plugin (leftover stubs live only in the abandoned `packages/` layout).
+> - **iOS/macOS**: connection parameters are **not implemented** (they are not even read-only).
+> - **Windows**: the native C++ side has bond handlers, but the Dart facade never calls them, so bonding is a silent no-op.
+> - **Linux**: bond methods fall through to base no-ops.
 
 ### Platform limitations
 
 - **Web** — central only; no L2CAP/background/descriptors/RSSI; `navigator.bluetooth.requestDevice()` picker; HTTPS required.
-- **Linux** — central only; needs BlueZ D-Bus; no L2CAP/peripheral/MTU/RSSI/descriptors.
-- **Windows** — central only; Windows 10+; no peripheral/L2CAP/RSSI/descriptors; MTU auto. Background: the app does not suspend when minimized/hidden (tray icon in the example runner), activated via `enableBackground`.
-- **iOS/macOS** — MTU auto-negotiated (`requestMtu` returns current value); connection parameters read-only; macOS needs the Bluetooth sandbox entitlement.
-- **Android** — L2CAP API 29+; peripheral role needs `BLUETOOTH_ADVERTISE` (Android 12+); scan needs `BLUETOOTH_SCAN` + `BLUETOOTH_CONNECT` + `ACCESS_FINE_LOCATION`; background uses a foreground service.
+- **Linux** — central only; needs BlueZ D-Bus; no L2CAP/peripheral/MTU/RSSI/descriptors/bond.
+- **Windows** — central only; Windows 10+; no peripheral/L2CAP/RSSI/descriptors/bond; MTU auto. Background: the app does not suspend when minimized/hidden (tray icon in the example runner), activated via `enableBackground`.
+- **iOS/macOS** — MTU auto-negotiated (`requestMtu` returns current value); connection parameters not implemented; bonding auto-managed by the OS; macOS needs the Bluetooth sandbox entitlement.
+- **Android** — L2CAP/descriptors/connection parameters not implemented in the native plugin; peripheral role needs `BLUETOOTH_ADVERTISE` (Android 12+); scan needs `BLUETOOTH_SCAN` + `BLUETOOTH_CONNECT` + `ACCESS_FINE_LOCATION`; bond management implemented (`createBond`/`removeBond`/`getBondState`); background mode is **not implemented** (`backgroundCentral: false`, no foreground service — `enableBackground` is a no-op).
 
 ## 6. Native Implementation Notes
 
 ### Android (`android/`, Kotlin)
 - Entry point `BlePlusPlugin.kt` (MethodChannel/EventChannel setup); `PeripheralManager.kt` implements GATT server + advertising.
 - Central-side GATT client logic lives in the plugin/Kotlin layer (only one outstanding GATT operation at a time — queue serializes reads/writes).
-- `requestConnectionPriority` maps to `BluetoothGatt` connection priorities.
+- **Not implemented in the native plugin**: descriptor R/W, L2CAP (client and server) and connection parameters (`getConnectionParameters`/`requestConnectionPriority` are absent — `capabilities` report them unsupported and the Dart API throws `BleUnsupportedError`).
 
 ### iOS / macOS (`ios/Classes/`, `macos/Classes/`, Swift)
 - Trio per platform: `BlePlusPlugin.swift` (registration), `CentralManager.swift` (CBCentralManager), `PeripheralManager.swift` (CBPeripheralManager).

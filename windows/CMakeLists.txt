@@ -24,8 +24,12 @@ list(APPEND PLUGIN_SOURCES
 
 # Define the plugin library target. Its name must not be changed (see comment
 # on PLUGIN_NAME above).
+# El header público "include/ble_plus/ble_plus_plugin.h" es el canónico que
+# espera el generated_plugin_registrant.cc del runner (símbolo
+# BlePlusPluginRegisterWithRegistrar). Se lista como fuente solo para que
+# aparezca en el proyecto de Visual Studio.
 add_library(${PLUGIN_NAME} SHARED
-  "include/ble_plus/ble_plus_plugin_c_api.h"
+  "include/ble_plus/ble_plus_plugin.h"
   "ble_plus_plugin_c_api.cpp"
   ${PLUGIN_SOURCES}
 )
@@ -47,7 +51,8 @@ set_target_properties(${PLUGIN_NAME} PROPERTIES
   CXX_STANDARD 17
   CXX_STANDARD_REQUIRED YES)
 
-# Find and use C++/WinRT
+# Find and use C++/WinRT. Si no está instalado, se baja el paquete NuGet
+# (Microsoft.Windows.CppWinRT) como fallback vía FetchContent.
 find_package(cppwinrt CONFIG QUIET)
 if(NOT cppwinrt_FOUND)
   # Use NuGet package for C++/WinRT
@@ -58,7 +63,9 @@ if(NOT cppwinrt_FOUND)
   )
 endif()
 
-# Add /await for coroutine support (MSVC)
+# Add /await for coroutine support (MSVC). Se aplica al plugin y al test runner
+# (que compila el mismo .cpp): sin /await, el uso de co_await en las coroutines
+# WinRT falla con C3773.
 target_compile_options(${PLUGIN_NAME} PRIVATE /await)
 
 # Source include directories and library dependencies.
@@ -85,10 +92,14 @@ set(TEST_RUNNER "${PROJECT_NAME}_test")
 enable_testing()
 
 # Add the Google Test dependency.
+# IMPORTANTE: se usa v1.14.0 (y no release-1.11.0 ni release-1.14.0) porque
+# googletest cambió su esquema de versionado a v1.x y porque CMake 4.2 eliminó
+# la compatibilidad con cmake_minimum_required < 3.5 (que usaba el tag 1.11).
+# v1.14.0 usa cmake_minimum_required(3.10), compatible con CMake 4.x.
 include(FetchContent)
 FetchContent_Declare(
   googletest
-  URL https://github.com/google/googletest/archive/release-1.11.0.zip
+  URL https://github.com/google/googletest/archive/v1.14.0.zip
 )
 # Prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
@@ -103,9 +114,14 @@ add_executable(${TEST_RUNNER}
   ${PLUGIN_SOURCES}
 )
 apply_standard_settings(${TEST_RUNNER})
+# Las coroutines WinRT requieren /await (igual que el plugin target).
+target_compile_options(${TEST_RUNNER} PRIVATE /await)
 target_include_directories(${TEST_RUNNER} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(${TEST_RUNNER} PRIVATE flutter_wrapper_plugin)
 target_link_libraries(${TEST_RUNNER} PRIVATE gtest_main gmock)
+# El test compila el .cpp del plugin directamente, así que también necesita
+# linkear windowsapp.lib (WinRT); sin esto → LNK2019 (RoGetActivationFactory).
+target_link_libraries(${TEST_RUNNER} PRIVATE windowsapp)
 # flutter_wrapper_plugin has link dependencies on the Flutter DLL.
 add_custom_command(TARGET ${TEST_RUNNER} POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_if_different

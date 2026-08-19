@@ -26,17 +26,22 @@ class BlePlusWindows extends BlePlusPlatform {
   static const _scanEvent = EventChannel('ble_plus/scan');
   static const _connectionEvent = EventChannel('ble_plus/connection');
   static const _charEvent = EventChannel('ble_plus/characteristic');
+  static const _logEvent = EventChannel('ble_plus/log');
 
   @override
   PlatformCapabilities get capabilities => const PlatformCapabilities(
         centralRole: true,
         peripheralRole: false,
         l2cap: false,
-        backgroundCentral: false,
+        // On Windows BLE keeps running when the window is minimized/hidden
+        // (desktop app; the runner hides to the tray instead of closing).
+        // Not an OS-level mobile mechanism, but the effect is "central running
+        // in the background".
+        backgroundCentral: true,
         backgroundPeripheral: false,
         connectionParameters: false,
         requestMtu: true,
-        bondManagement: true,
+        bondManagement: false,
       );
 
   // ── Adapter ──────────────────────────────────────────────
@@ -49,6 +54,33 @@ class BlePlusWindows extends BlePlusPlatform {
   @override
   Future<bool> requestEnable() async {
     return await _method.invokeMethod<bool>('requestEnable') ?? false;
+  }
+
+  // ── Background ───────────────────────────────────────────
+  // There is no mobile-style OS mechanism to configure on Windows (there is no
+  // suspension), but the background behavior is provided by the app RUNNER:
+  // when hidden to the tray, BLE stays active. enableBackground/disableBackground
+  // notify the runner (channel "ble_plus/runner_background", registered by
+  // FlutterWindow) to enable/disable "hide to tray on close".
+  static const _runnerBackground = MethodChannel('ble_plus/runner_background');
+
+  @override
+  Future<void> enableBackground(BackgroundSettings settings) async {
+    try {
+      await _runnerBackground.invokeMethod('setBackgroundMode', true);
+    } on PlatformException {
+      // The runner may not have the channel registered (e.g. in tests); ignore:
+      // BLE keeps working in the foreground anyway.
+    }
+  }
+
+  @override
+  Future<void> disableBackground() async {
+    try {
+      await _runnerBackground.invokeMethod('setBackgroundMode', false);
+    } on PlatformException {
+      // Ignore (same criterion as enableBackground).
+    }
   }
 
   // ── Scanning ─────────────────────────────────────────────
@@ -157,6 +189,24 @@ class BlePlusWindows extends BlePlusPlatform {
         })
         .asBroadcastStream();
     return _charStream!;
+  }
+
+  // ── Diagnostics: native logs ─────────────────────────────
+  // Relays the "ble_plus/log" EventChannel (registered by the C++ plugin).
+  // BleCentral subscribes to it and dumps it to the app's BleLogger so the
+  // native scan/connect/discover/GATT steps can be watched live.
+  Stream<BleLogEntry>? _logStream;
+
+  @override
+  Stream<BleLogEntry> get nativeLogStream {
+    _logStream ??= _logEvent
+        .receiveBroadcastStream()
+        .map((event) {
+          final map = Map<String, dynamic>.from(event as Map);
+          return BleLogEntry.fromMap(map);
+        })
+        .asBroadcastStream();
+    return _logStream!;
   }
 
   @override

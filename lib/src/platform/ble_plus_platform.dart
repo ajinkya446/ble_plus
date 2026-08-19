@@ -94,6 +94,12 @@ abstract class BlePlusPlatform extends PlatformInterface {
   Future<void> disableBackground() async {}
   Stream<List<String>> get restoredDeviceIdsStream => const Stream.empty();
 
+  // ── Diagnostics: native logs ─────────────────────────────
+  // Stream of log entries emitted by the native plugin (channel
+  // "ble_plus/log"). Empty by default: only platforms that emit them
+  // (Windows) override it. BleCentral relays them to its BleLogger.
+  Stream<BleLogEntry> get nativeLogStream => const Stream.empty();
+
   Future<void> dispose() async {}
 }
 

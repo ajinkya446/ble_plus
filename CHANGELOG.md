@@ -1,4 +1,29 @@
-## 1.0.3 -2026-08-05
+## Unreleased
+
+- **Honest per-platform capabilities**: `PlatformCapabilities` now reports what each platform actually implements.
+  - `MethodChannelBlePlus` (Android/iOS/macOS) is platform-aware: `l2cap` is `true` only on iOS/macOS (the Android native plugin has no L2CAP), `requestMtu` only on Android (iOS/macOS auto-negotiate), `bondManagement` only on Android (iOS/macOS auto-manage), and `connectionParameters` is `false` everywhere (no platform implements it — it was never even read-only).
+  - `backgroundCentral`/`backgroundPeripheral` are `false` on mobile: the Android foreground service and iOS state restoration were never actually implemented — `enableBackground` was a silent no-op. `BleCentral.enableBackground()` now logs a warning and returns on mobile. Windows keeps its tray background mode (`backgroundCentral: true`).
+  - `bondManagement` is now `false` on Windows and Linux (the APIs fell through to base no-ops; Windows' native bond handlers were never wired from the Dart facade).
+  - Because `openL2CapChannel`, `publishL2CapChannel` and `requestConnectionParameters` are gated on these flags, unsupported calls now throw a clean `BleUnsupportedError` instead of a confusing native `PlatformException`.
+- **Docs**: README, ARCHITECTURE, AGENTS and the library doc updated to a support matrix that matches the code (Android: no L2CAP/descriptors/connection params; iOS/macOS: no connection params; Linux/Windows: no bond).
+
+## 1.0.5 - 2026-08-17
+
+- **Windows background support (tray icon)**: `enableBackground`/`disableBackground` now activate the runner's tray background mode (hide to tray on close via the `ble_plus/runner_background` channel) in the example app. The window is hidden to the tray instead of terminating the process so BLE keeps running.
+- **Windows robust GATT service discovery**: `DiscoverServices` now queries `GetGattServicesAsync` first with `BluetoothCacheMode::Cached` (the OS cache populated during connect/GattSession) and falls back to a single `Uncached` attempt only when the cache is empty. This avoids the CRT abort on devices exposing the Generic Attribute Service (0x1801 / Service Changed) and retries transient `Unreachable` status.
+- **Windows Service Changed (2A05) guard**: subscribing to Service Changed from the app is now rejected with a clear error, since the OS stack manages it internally and writing its CCCD previously hung the process.
+- **Windows structured error propagation**: native failures now surface through `error_mapper.dart` with stage, deviceId, HRESULT, GATT status and protocolError, filling the public `BleError` fields instead of generic `PlatformException`.
+- **Windows per-device GATT serialization and timeouts**: reads/writes/discover are serialized per device and awaited with `AwaitWithTimeout` (deterministic timeouts, no blocking UI thread, no leaked `std::future` threads).
+- **Windows characteristic cache**: discovered characteristics are cached by device to avoid re-querying the GATT stack by UUID (which could abort on Service Changed); the cache is cleared on disconnect.
+- **Example app**: notification stream throttled and structured errors surfaced in the UI.
+- **Docs**: README and ARCHITECTURE updated with the Windows background support and the new discovery/error behavior.
+
+## 1.0.4 - 2026-08-05
+
+- Windows plugin: robust GATT discovery and structured error propagation groundwork.
+- Version and repository metadata updated in `pubspec.yaml`.
+
+## 1.0.3 - 2026-08-05
 - Patch release to prepare the links and documentation improvement
 
 ## 1.0.1 - 2026-08-03
@@ -47,6 +72,8 @@
 ### Background Support
 * iOS: CoreBluetooth state restoration via `iosRestorationIdentifier`
 * Android: Foreground service support architecture
+
+> ⚠️ **Historical claim only.** These were announced in the 1.0.0-era feature list but never actually implemented in the native code. The API reports `backgroundCentral: false` / `backgroundPeripheral: false` on mobile; only the Windows tray background mode is real (see the Unreleased entry above).
 
 ### Error Handling
 * Sealed `BleError` hierarchy: `BleConnectionError`, `BleGattError`, `BleTimeoutError`, `BlePermissionError`, `BleScanError`, `BleUnsupportedError`

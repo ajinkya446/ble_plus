@@ -1,12 +1,14 @@
 /// A production-ready Flutter BLE plugin providing comprehensive Central and Peripheral APIs,
-/// L2CAP channel support, background operation capabilities, and cross-platform integrations.
+/// L2CAP channel support, and cross-platform integrations.
 ///
 /// This library enables developers to:
 /// - Implement BLE Central role for scanning and connecting to peripherals
 /// - Implement BLE Peripheral role for advertising and accepting connections
-/// - Use L2CAP channels for raw data transmission
-/// - Manage background BLE operations
+/// - Use L2CAP channels for raw data transmission (iOS/macOS; not Android)
 /// - Handle connection parameters and MTU negotiation
+///
+/// Background mode is only implemented on Windows (tray mode); mobile platforms
+/// report `backgroundCentral: false` / `backgroundPeripheral: false`.
 ///
 /// Key classes:
 /// - [BleCentral]: Manage scanning and central-role operations
@@ -19,10 +21,10 @@
 /// import 'package:ble_plus/ble_plus.dart';
 ///
 /// // Scan for BLE devices
-/// final central = BleCentral.instance;
+/// final central = BleCentral();
 /// central.startScan();
 /// ```
-library ble_plus;
+library;
 
 // Platform interface
 // App-facing API

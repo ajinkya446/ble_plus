@@ -52,6 +52,22 @@ class Win32Window {
   // If true, closing this window will quit the application.
   void SetQuitOnClose(bool quit_on_close);
 
+  // Returns whether the tray icon is currently added (used by the automated
+  // tray tests; see example/windows/test/tray_icon_test.cpp).
+  bool IsTrayIconAdded() const { return tray_icon_added_; }
+
+  // Custom message that the tray icon (Shell_NotifyIcon) sends to the window
+  // proc. `WM_APP + 1` is reserved for application messages. Public so the
+  // automated test can send it (SendMessage).
+  static constexpr UINT kTrayCallbackMessage = WM_APP + 1;
+
+  // Enables/disables the runner background mode: when active, closing the
+  // window (WM_CLOSE) hides it to the tray instead of terminating the process
+  // (BLE keeps running). When disabled, the tray icon is removed if present and
+  // closing terminates the process again. Invoked by the channel
+  // "ble_plus/runner_background" (see FlutterWindow::OnCreate).
+  void SetBackgroundMode(bool enabled);
+
   // Return a RECT representing the bounds of the current client area.
   RECT GetClientArea();
 
@@ -90,6 +106,20 @@ class Win32Window {
   // Update the window frame's theme to match the system theme.
   static void UpdateTheme(HWND const window);
 
+  // ── Tray icon / background ────────────────────────────────────────────────
+  // Hides the window to the tray instead of closing it: the process (and the
+  // BLE) keep running in background. Called from WM_CLOSE.
+  void HideToTray(HWND window);
+
+  // Shows the tray context menu (Restore / Exit).
+  void ShowTrayMenu(HWND window);
+
+  // Removes the tray icon.
+  void RemoveTrayIcon(HWND window);
+
+  // Actually closes the app from the tray menu.
+  void QuitFromTray(HWND window);
+
   bool quit_on_close_ = false;
 
   // window handle for top level window.
@@ -97,6 +127,14 @@ class Win32Window {
 
   // window handle for hosted content.
   HWND child_content_ = nullptr;
+
+  // Whether the tray icon is added (so it is not duplicated on hot restart).
+  bool tray_icon_added_ = false;
+
+  // Whether background mode is active (hide to tray on close). Disabled by
+  // default: only `enableBackground` (runner channel) activates it, like on
+  // the rest of the plugin's platforms.
+  bool background_mode_ = false;
 };
 
 #endif  // RUNNER_WIN32_WINDOW_H_

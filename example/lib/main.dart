@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:ble_plus/ble_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -236,9 +236,12 @@ class ScanPage extends StatefulWidget {
 
 class _ScanPageState extends State<ScanPage> {
   // ─── BLE Central instance with debug logging ─────────────
-  final _central = BleCentral(
+  // onLog only dumps to console (debugPrint). In debug mode the package logs
+  // and the native plugin logs (channel "ble_plus/log") are visible; in release
+  // everything is silenced (BleLogLevel.none) and the UI is never touched.
+  late final _central = BleCentral(
     logger: BleLogger(
-      level: BleLogLevel.debug,
+      level: kDebugMode ? BleLogLevel.debug : BleLogLevel.none,
       onLog: (level, tag, msg) => debugPrint('[$tag] $msg'),
     ),
   );
@@ -246,6 +249,17 @@ class _ScanPageState extends State<ScanPage> {
   final List<BleScanResult> _results = [];
   StreamSubscription<BleScanResult>? _scanSub;
   bool _scanning = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Enable background mode on platforms that support it (Windows: the runner
+    // hides the window to the tray on close and BLE keeps running). Mobile
+    // (Android/iOS/macOS) reports backgroundCentral=false: no-op, no FGS.
+    if (_central.capabilities.backgroundCentral) {
+      _central.enableBackground();
+    }
+  }
 
   @override
   void dispose() {
@@ -467,6 +481,11 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
   String? _error;
   final Map<String, List<int>> _lastValues = {};
   final Map<String, StreamSubscription> _notifySubs = {};
+  // Notification throttling: high-frequency notifications (ECG) would call
+  // setState per sample and freeze the UI. The last pending value is stored
+  // and a periodic Timer (~10 Hz) refreshes the screen.
+  final Map<String, List<int>> _notifyPending = {};
+  final Map<String, Timer> _notifyTimers = {};
   int? _rssi;
   BleConnectionParameters? _connParams;
   BleConnectionState _connectionState = BleConnectionState.connecting;
@@ -484,6 +503,10 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
   void dispose() {
     _connStateSub?.cancel();
     _bondStateSub?.cancel();
+    for (final t in _notifyTimers.values) {
+      t.cancel();
+    }
+    _notifyTimers.clear();
     for (final sub in _notifySubs.values) {
       sub.cancel();
     }
@@ -560,12 +583,15 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
       });
     } on BleConnectionError catch (e) {
       setState(() {
-        _error = 'Connection failed: ${e.message} (code: ${e.platformCode})';
+        _error = 'Connection failed: ${e.message}'
+            '${e.platformMessage != null ? '\n[${e.platformMessage}]' : ''}'
+            '${e.platformCode != null ? '\n(hr: 0x${e.platformCode!.toRadixString(16).toUpperCase()})' : ''}';
         _connecting = false;
       });
     } on BleError catch (e) {
       setState(() {
-        _error = 'BLE Error: ${e.message}';
+        _error = 'BLE Error: ${e.message}'
+            '${e.platformMessage != null ? '\n[${e.platformMessage}]' : ''}';
         _connecting = false;
       });
     }
@@ -582,7 +608,7 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
         );
       }
     } on BleError catch (e) {
-      _showError('Read failed: ${e.message}');
+      _showError('Read failed: ${_describeError(e)}');
     }
   }
 
@@ -597,7 +623,7 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
         );
       }
     } on BleError catch (e) {
-      _showError('Write failed: ${e.message}');
+      _showError('Write failed: ${_describeError(e)}');
     }
   }
 
@@ -607,14 +633,36 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
     if (_notifySubs.containsKey(key)) {
       _notifySubs[key]!.cancel();
       _notifySubs.remove(key);
+      _notifyTimers[key]?.cancel();
+      _notifyTimers.remove(key);
+      _notifyPending.remove(key);
       _connection!.unsubscribeFromCharacteristic(char);
       setState(() {});
     } else {
-      final sub = _connection!.subscribeToCharacteristic(char).listen(
-        (value) {
-          setState(() => _lastValues[key] = value);
+      // Notifications land in _notifyPending and a Timer (~10 Hz) refreshes
+      // the UI with the latest value, instead of a setState per sample.
+      _notifyTimers[key] ??= Timer.periodic(
+        const Duration(milliseconds: 100),
+        (_) {
+          final pending = _notifyPending[key];
+          if (pending != null && mounted) {
+            setState(() => _lastValues[key] = pending);
+          }
         },
-        onError: (e) => _showError('Notify error: $e'),
+      );
+      final sub = _connection!.subscribeToCharacteristic(char).listen(
+        (value) => _notifyPending[key] = value,
+        onError: (e) {
+          _showError('Notify error: $e');
+          // The subscribe failed (e.g. Service Changed 2A05 on Windows):
+          // revert the toggle so it is not left marked as active.
+          _notifySubs[key]?.cancel();
+          _notifySubs.remove(key);
+          _notifyTimers[key]?.cancel();
+          _notifyTimers.remove(key);
+          _notifyPending.remove(key);
+          if (mounted) setState(() {});
+        },
       );
       _notifySubs[key] = sub;
       setState(() {});
@@ -634,7 +682,7 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
     } on BleUnsupportedError {
       _showError('RSSI read not supported on this platform');
     } on BleError catch (e) {
-      _showError('RSSI read failed: ${e.message}');
+      _showError('RSSI read failed: ${_describeError(e)}');
     }
   }
 
@@ -657,7 +705,7 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
         }
       }
     } on BleError catch (e) {
-      _showError('Bond failed: ${e.message}');
+      _showError('Bond failed: ${_describeError(e)}');
     }
   }
 
@@ -676,7 +724,7 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
     } on BleUnsupportedError {
       _showError('Connection parameters not supported on this platform');
     } on BleError catch (e) {
-      _showError('Failed: ${e.message}');
+      _showError('Failed: ${_describeError(e)}');
     }
   }
 
@@ -684,6 +732,11 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
   Future<void> _disconnect() async {
     _connStateSub?.cancel();
     _bondStateSub?.cancel();
+    for (final t in _notifyTimers.values) {
+      t.cancel();
+    }
+    _notifyTimers.clear();
+    _notifyPending.clear();
     for (final sub in _notifySubs.values) {
       sub.cancel();
     }
@@ -691,6 +744,12 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
     await _connection?.disconnect();
     if (mounted) Navigator.pop(context);
   }
+
+  // Formats a BleError including the structured detail sent by the native
+  // plugin (platformMessage: stage, HRESULT, gattStatus, protocolError...).
+  String _describeError(BleError e) => e.platformMessage != null
+      ? '${e.message} [${e.platformMessage}]'
+      : e.message;
 
   void _showError(String msg) {
     if (!mounted) return;
@@ -1058,7 +1117,11 @@ class _PeripheralPageState extends State<PeripheralPage> {
   @override
   void initState() {
     super.initState();
-    _setupListeners();
+    // Only subscribe to the peripheral streams on platforms that support them;
+    // on central-only platforms (Web/Linux/Windows) the channel does not exist.
+    if (_peripheralSupported) {
+      _setupListeners();
+    }
   }
 
   void _setupListeners() {

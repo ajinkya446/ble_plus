@@ -8,10 +8,9 @@ A production-ready Flutter BLE plugin with **Central** and **Peripheral** roles 
 
 - **Central Mode**: Scan, connect, discover services, read/write/notify characteristics
 - **Peripheral Mode**: Advertise, GATT server, handle read/write requests, send notifications
-- **L2CAP Channels**: High-throughput data streaming (iOS 11+, Android 10+, macOS 10.14+)
-- **Background Support**: iOS state restoration, Android foreground service
-- **Connection Parameters**: Request/inspect connection intervals
-- **Descriptor R/W**: Read and write characteristic descriptors
+- **L2CAP Channels**: High-throughput data streaming (iOS 11+ and macOS 10.14+ only; not Android)
+- **Background Support**: Windows tray (hide to tray on close). Mobile background mode (foreground service / state restoration) is not implemented; the API reports `backgroundCentral: false` there.
+- **Descriptor R/W**: Read and write characteristic descriptors (iOS/macOS only)
 - **Unified Error Handling**: Sealed `BleError` hierarchy with platform error codes
 - **Configurable Logging**: Debug, info, warning, error levels with custom callbacks
 - **6 Platforms**: Android, iOS, macOS, Web, Linux, Windows
@@ -23,22 +22,27 @@ A production-ready Flutter BLE plugin with **Central** and **Peripheral** roles 
 | **Central: Scan** | ✅ | ✅ | ✅ | ✅¹ | ✅ | ✅ |
 | **Central: Connect** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **Central: GATT R/W/Notify** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Central: Descriptors** | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| **Central: Descriptors** | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
 | **Central: MTU Request** | ✅ | Auto | Auto | Auto | ❌ | Auto |
 | **Central: Read RSSI** | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| **Central: Connection Params** | ✅ | Read-only | Read-only | ❌ | ❌ | ❌ |
+| **Central: Connection Params** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **Peripheral: Advertise** | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
 | **Peripheral: GATT Server** | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
 | **Peripheral: Notifications** | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| **L2CAP Channels** | ✅² | ✅³ | ✅⁴ | ❌ | ❌ | ❌ |
-| **Background Mode** | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **Bond/Pair Management** | ✅ | Auto | Auto | ❌ | ✅ | ✅⁵ |
+| **L2CAP Channels** | ❌ | ✅² | ✅³ | ❌ | ❌ | ❌ |
+| **Background Mode** | ❌ | ❌ | ❌ | ❌ | ❌ | ✅⁴ |
+| **Bond/Pair Management** | ✅ | Auto | Auto | ❌ | ❌ | ❌ |
 
 > ¹ Web scanning uses a device picker dialog (requires user gesture + HTTPS). Chrome/Edge only.  
-> ² Android L2CAP requires API 29+ (Android 10).  
-> ³ iOS L2CAP requires iOS 11+.  
-> ⁴ macOS L2CAP requires macOS 10.14+.  
-> ⁵ Windows: `getBondState()` supported; `removeBond()` not available.
+> ² iOS L2CAP requires iOS 11+.  
+> ³ macOS L2CAP requires macOS 10.14+.  
+> ⁴ Windows: hides to the tray on close; requires `enableBackground` (the example runner implements it via the `ble_plus/runner_background` channel).
+
+> **Honest status notes** — the ✅/❌ above reflect what the code actually implements today:
+> - **Android**: L2CAP, descriptor R/W and connection parameters are **not implemented** in the native plugin (leftover stubs live only in the abandoned `packages/` layout).
+> - **iOS/macOS**: connection parameters are **not implemented** (they are not even read-only).
+> - **Windows**: the native C++ side has bond handlers, but the Dart facade never calls them, so bonding is a silent no-op.
+> - **Linux**: bond methods fall through to base no-ops.
 
 ## Platform-Specific Limitations
 
@@ -53,26 +57,31 @@ A production-ready Flutter BLE plugin with **Central** and **Peripheral** roles 
 ### Linux
 - **Central role only** — no peripheral or L2CAP support
 - Uses BlueZ D-Bus API — requires `bluez` package installed
-- No MTU request, RSSI read, descriptor R/W, or background support
+- No MTU request, RSSI read, descriptor R/W, bond management, or background support
 - Scanning requires appropriate D-Bus permissions
 
 ### Windows
 - **Central role only** — no peripheral or L2CAP support
 - Uses WinRT BLE APIs — requires **Windows 10** or later
-- No RSSI read, descriptor R/W, or background support
+- No RSSI read, descriptor R/W, L2CAP, or bond management support
 - MTU is auto-negotiated by the OS
+- Background support: with `enableBackground`, closing the window hides it to the system tray instead of terminating the process (BLE keeps running). The example runner implements this via the `ble_plus/runner_background` channel.
 
 ### iOS / macOS
 - **MTU is auto-negotiated** — `requestMtu()` returns current value but cannot set it
-- **Connection parameters are read-only** — iOS/macOS manages intervals automatically
+- **Connection parameters are not implemented** (they are not even read-only)
 - L2CAP requires iOS 11+ / macOS 10.14+
-- Background mode (iOS only) requires `UIBackgroundModes` in Info.plist
+- Bonding is managed automatically by the OS (no programmatic `createBond`/`removeBond` API)
+- Background mode is **not implemented**: `backgroundCentral` reports `false`; `enableBackground()` is a no-op (state restoration is not wired up)
 
 ### Android
-- L2CAP requires **API 29+** (Android 10)
+- **L2CAP not implemented** (no native support; API 29+ would allow it)
+- **Descriptor R/W not implemented** (native plugin lacks `readDescriptor`/`writeDescriptor`)
+- **Connection parameters not implemented** (`getConnectionParameters`/`requestConnectionPriority` are no-ops)
+- Bond management implemented: `createBond()`, `removeBond()`, `getBondState()`
 - Peripheral role requires `BLUETOOTH_ADVERTISE` permission (Android 12+)
 - `BLUETOOTH_SCAN` + `BLUETOOTH_CONNECT` + `ACCESS_FINE_LOCATION` required for scanning
-- Background mode uses foreground service architecture
+- No background mode: `backgroundCentral`/`backgroundPeripheral` report `false`; `enableBackground()` is a no-op (no foreground service)
 
 ## Quick Start
 
@@ -99,17 +108,19 @@ connection.subscribeToCharacteristic(char).listen((data) {
   print('Notification: $data');
 });
 
-// Read/write descriptors
+// Read/write descriptors (iOS/macOS only)
 final descValue = await connection.readDescriptor(descriptor);
 await connection.writeDescriptor(descriptor, [0x01, 0x00]);
 
 // Read RSSI
 final rssi = await connection.readRssi();
 
-// Request connection parameters (Android)
+// Request connection parameters (NOT implemented on any platform yet)
 await connection.requestConnectionParameters(ConnectionPriority.high);
 
 // ── Bond / Pair ────────────────────────────────────────────
+// Bond management is Android-only in practice; iOS/macOS auto-manage
+// and Linux/Windows do not wire it up.
 // Check bond state
 final bondState = await connection.bondState; // none, bonding, bonded
 
@@ -121,7 +132,7 @@ connection.bondStateStream.listen((state) {
   print('Bond state: $state'); // none → bonding → bonded
 });
 
-// Remove bond (Android/Linux)
+// Remove bond (Android)
 await connection.removeBond();
 
 // ── Connection State ───────────────────────────────────────
@@ -187,19 +198,23 @@ peripheral.onL2CapChannelOpened.listen((channel) {
 });
 
 // ── Background Mode ────────────────────────────────────────
-// iOS state restoration
-await central.enableBackground(
-  iosRestorationIdentifier: 'my_app_central',
-);
+// Only supported on Windows (runner tray mode). On mobile platforms
+// `backgroundCentral` is false and enableBackground() is a no-op, so
+// always gate the call on capabilities:
+final caps = central.capabilities;
+if (caps.backgroundCentral) {
+  await central.enableBackground();
+  // Listen for restored devices after app relaunch (desktop only today)
+  central.restoredDevices.listen((devices) {
+    print('Restored ${devices.length} devices');
+  });
+}
 
-// Listen for restored devices after app relaunch
-central.restoredDevices.listen((devices) {
-  print('Restored ${devices.length} devices');
-});
+// Note: on Windows, enableBackground() activates the runner's tray
+// background mode (hide to tray on close instead of terminating).
 
 // ── Platform Capabilities ──────────────────────────────────
 // Check what the current platform supports before using features
-final caps = central.capabilities;
 if (caps.peripheralRole) {
   // Safe to use peripheral features
 }
@@ -254,7 +269,7 @@ Add to `Info.plist`:
 <string>This app uses Bluetooth to communicate with BLE devices.</string>
 ```
 
-For background BLE:
+For background BLE (only relevant once state restoration is implemented; the plugin currently does not support iOS background mode):
 ```xml
 <key>UIBackgroundModes</key>
 <array>
@@ -368,13 +383,13 @@ windows/   # C++ (WinRT BLE)
 | Global singleton architecture | ✅ Instance-based `BleCentral`/`BlePeripheral` |
 | Generic `PlatformException` errors | ✅ Sealed `BleError` hierarchy |
 | No configurable logging | ✅ `BleLogger` with levels + callbacks |
-| No connection parameters | ✅ `requestConnectionParameters()` |
+| No connection parameters | ❌ Not implemented on any platform |
 | Stream handling issues | ✅ Properly closed streams, reliable `onDone` |
-| No descriptor R/W | ✅ `readDescriptor()` / `writeDescriptor()` |
+| No descriptor R/W | ✅ iOS/macOS only (not Android) |
 | No MTU change stream | ✅ `connection.mtuStream` |
-| No bond/pair management | ✅ `createBond()`, `removeBond()`, `bondState`, `bondStateStream` |
+| No bond/pair management | ✅ Android; OS-managed on iOS/macOS; not wired on Linux/Windows |
 | No real-time connection state | ✅ `isConnected`, `connectionState`, `stateStream` |
 | No Web/Linux/Windows | ✅ All 6 platforms supported |
 | No macOS (community fork) | ✅ Native CoreBluetooth implementation |
-| No background mode architecture | ✅ iOS restoration + Android FGS |
+| No background mode architecture | ✅ Windows tray; mobile (iOS restoration / Android FGS) not implemented |
 | Hard to test/mock | ✅ Platform interface pattern, DI via logger |

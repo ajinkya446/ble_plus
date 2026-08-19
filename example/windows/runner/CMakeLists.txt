@@ -35,6 +35,11 @@ target_compile_definitions(${BINARY_NAME} PRIVATE "NOMINMAX")
 target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app)
 target_link_libraries(${BINARY_NAME} PRIVATE "dwmapi.lib")
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
+# Expose every plugin's include dir so generated_plugin_registrant.cc can find
+# the plugin headers (e.g. <ble_plus/ble_plus_plugin.h>).
+file(GLOB PLUGIN_INCLUDE_DIRS
+  "${FLUTTER_MANAGED_DIR}/.plugin_symlinks/*/windows/include")
+target_include_directories(${BINARY_NAME} PRIVATE ${PLUGIN_INCLUDE_DIRS})
 
 # Run the Flutter tool portions of the build. This must not be removed.
 add_dependencies(${BINARY_NAME} flutter_assemble)

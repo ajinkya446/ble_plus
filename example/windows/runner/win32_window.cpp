@@ -2,6 +2,7 @@
 
 #include <dwmapi.h>
 #include <flutter_windows.h>
+#include <shellapi.h>
 
 #include "resource.h"
 
@@ -179,7 +180,27 @@ Win32Window::MessageHandler(HWND hwnd,
                             WPARAM const wparam,
                             LPARAM const lparam) noexcept {
   switch (message) {
+    case WM_CLOSE:
+      // En modo background, cerrar oculta a la bandeja (el proceso y el BLE
+      // siguen). Sin background (por defecto), cerrar termina la app como
+      // cualquier ventana de Windows (break → DefWindowProc → WM_DESTROY).
+      if (background_mode_) {
+        HideToTray(hwnd);
+        return 0;
+      }
+      break;
+
+    case kTrayCallbackMessage:
+      if (LOWORD(lparam) == WM_LBUTTONDBLCLK) {
+        ShowWindow(hwnd, SW_SHOWNORMAL);
+        SetForegroundWindow(hwnd);
+      } else if (LOWORD(lparam) == WM_RBUTTONUP) {
+        ShowTrayMenu(hwnd);
+      }
+      return 0;
+
     case WM_DESTROY:
+      RemoveTrayIcon(hwnd);
       window_handle_ = nullptr;
       Destroy();
       if (quit_on_close_) {
@@ -261,6 +282,83 @@ HWND Win32Window::GetHandle() {
 
 void Win32Window::SetQuitOnClose(bool quit_on_close) {
   quit_on_close_ = quit_on_close;
+}
+
+// Enables/disables background mode. When disabled, the tray icon is removed
+// if present (in case the app was hidden) so it is not left orphaned.
+void Win32Window::SetBackgroundMode(bool enabled) {
+  background_mode_ = enabled;
+  if (!enabled && tray_icon_added_) {
+    RemoveTrayIcon(window_handle_);
+  }
+}
+
+// ── Tray icon / background ────────────────────────────────────────────────
+// Hides the window to the tray (process and BLE keep running). The first time
+// it adds the tray icon; it reuses the app's own icon.
+void Win32Window::HideToTray(HWND hwnd) {
+  if (!tray_icon_added_) {
+    NOTIFYICONDATAW nid{};
+    nid.cbSize = sizeof(nid);
+    nid.hWnd = hwnd;
+    nid.uID = 1;
+    nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
+    nid.uCallbackMessage = kTrayCallbackMessage;
+    nid.hIcon = LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_APP_ICON));
+    // In the test executable the IDI_APP_ICON resource is absent: the default
+    // icon is used so Shell_NotifyIcon is not broken.
+    if (nid.hIcon == nullptr) {
+      nid.hIcon = LoadIcon(nullptr, IDI_APPLICATION);
+    }
+    wcscpy_s(nid.szTip, L"ble_plus example (BLE running in background)");
+    Shell_NotifyIconW(NIM_ADD, &nid);
+    tray_icon_added_ = true;
+  }
+  ShowWindow(hwnd, SW_HIDE);
+}
+
+// Tray context menu: Restore / Exit.
+void Win32Window::ShowTrayMenu(HWND hwnd) {
+  HMENU menu = CreatePopupMenu();
+  AppendMenuW(menu, MF_STRING, 1, L"Restore");
+  AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
+  AppendMenuW(menu, MF_STRING, 2, L"Exit");
+
+  POINT pt;
+  GetCursorPos(&pt);
+  // SetForegroundWindow prevents the menu from closing on the first click.
+  SetForegroundWindow(hwnd);
+  const int cmd = TrackPopupMenu(
+      menu, TPM_RETURNCMD | TPM_NONOTIFY | TPM_LEFTBUTTON, pt.x, pt.y, 0, hwnd,
+      nullptr);
+  DestroyMenu(menu);
+
+  if (cmd == 1) {
+    ShowWindow(hwnd, SW_SHOWNORMAL);
+    SetForegroundWindow(hwnd);
+  } else if (cmd == 2) {
+    QuitFromTray(hwnd);
+  }
+}
+
+void Win32Window::RemoveTrayIcon(HWND hwnd) {
+  if (tray_icon_added_) {
+    NOTIFYICONDATAW nid{};
+    nid.cbSize = sizeof(nid);
+    nid.hWnd = hwnd;
+    nid.uID = 1;
+    Shell_NotifyIconW(NIM_DELETE, &nid);
+    tray_icon_added_ = false;
+  }
+}
+
+// Actually closes the app: removes the icon, shows the window and destroys it.
+// WM_DESTROY will call PostQuitMessage(0) (quit_on_close_ = true) → ends the
+// loop.
+void Win32Window::QuitFromTray(HWND hwnd) {
+  RemoveTrayIcon(hwnd);
+  ShowWindow(hwnd, SW_SHOWNORMAL);
+  DestroyWindow(hwnd);
 }
 
 bool Win32Window::OnCreate() {

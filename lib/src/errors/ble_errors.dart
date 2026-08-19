@@ -29,7 +29,8 @@ class BleConnectionError extends BleError {
 
 class BleGattError extends BleError {
   final GattErrorCode code;
-  const BleGattError(super.message, {required this.code, super.platformCode});
+  const BleGattError(super.message,
+      {required this.code, super.platformCode, super.platformMessage});
 }
 
 class BleScanError extends BleError {

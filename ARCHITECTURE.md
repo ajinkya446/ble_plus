@@ -1,13 +1,13 @@
-# ble_plus — Architecture (Current, Single-Package)
+# ble_plus — Architecture (Current, Federated Melos Workspace)
 
-> **Status:** Describes the shipped code as of v1.0.5.
-> Earlier versions of this document described an abandoned *federated monorepo* design. That plan was dropped in favor of a simpler single-package structure; see [History & Decisions](#history--decisions).
+> **Status:** Describes the active federated workspace setup managed with Melos.
+> The package layout is now organized under `packages/*` and is coordinated by `melos.yaml` rather than a single root package.
 
 ## 1. Overview
 
-`ble_plus` is a **single Flutter plugin package**. The repository root *is* the package, and `example/` is the bundled demo app that depends on it via `path: ../`.
+`ble_plus` is now organized as a **federated Flutter plugin workspace**. The app-facing package lives in `packages/ble_plus`, platform implementations live in `packages/ble_plus_android`, `packages/ble_plus_ios`, and the shared contract lives in `packages/ble_plus_platform_interface`.
 
-There is no Melos workspace. `melos.yaml` is a leftover that exists only as a comment. The `packages/` directory contains deprecated leftovers from the abandoned federated layout (`packages/ble_plus_android` is explicitly marked "DEPRECATED"); it is excluded from analysis by `analysis_options.yaml` and is **not** live code.
+The repository uses a real Melos workspace via `melos.yaml` to bootstrap and analyze the packages collectively.
 
 Key properties of the design:
 

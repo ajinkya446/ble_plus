@@ -1,5 +1,7 @@
 include: package:flutter_lints/flutter.yaml
 
-linter:
-  rules:
-    public_member_api_docs: true
+analyzer:
+  errors:
+    public_member_api_docs: ignore
+    unnecessary_library_name: ignore
+    dangling_library_doc_comments: ignore

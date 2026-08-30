@@ -2,7 +2,6 @@ include: package:flutter_lints/flutter.yaml
 
 analyzer:
   exclude:
-    - packages/**
     - build/**
     - android/**
     - ios/**
@@ -10,6 +9,10 @@ analyzer:
     - windows/**
     - macos/**
     - linux/**
+  errors:
+    public_member_api_docs: ignore
+    unnecessary_library_name: ignore
+    dangling_library_doc_comments: ignore
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options

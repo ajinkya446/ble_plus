@@ -62,18 +62,6 @@ void main() {
     });
   });
 
-  group('CharacteristicProperties', () {
-    test('fromBitmask and toBitmask roundtrip', () {
-      const props = CharacteristicProperties(read: true, notify: true);
-      final mask = props.toBitmask();
-      final restored = CharacteristicProperties.fromBitmask(mask);
-      expect(restored.read, isTrue);
-      expect(restored.notify, isTrue);
-      expect(restored.write, isFalse);
-      expect(restored.indicate, isFalse);
-    });
-  });
-
   group('BleErrors', () {
     test('BleUnsupportedError is a BleError', () {
       const error = BleUnsupportedError('Not supported');

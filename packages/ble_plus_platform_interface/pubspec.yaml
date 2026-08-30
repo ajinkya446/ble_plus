@@ -1,13 +1,15 @@
 name: ble_plus_platform_interface
 description: "Platform interface package for ble_plus; shared types and platform contracts used by the plugin implementations across Android, iOS, macOS, Linux, Windows and Web."
-version: 1.0.4
+version: 1.0.5
 homepage: https://github.com/ajinkya446/ble_plus
 repository: https://github.com/ajinkya446/ble_plus
 issue_tracker: https://github.com/ajinkya446/ble_plus/issues
 repository_name: ajinkya446/ble_plus
+publish_to: 'none'
 
 environment:
   sdk: ^3.11.0
+resolution: workspace
 
 dependencies:
   flutter:

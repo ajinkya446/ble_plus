@@ -30,3 +30,10 @@ enum BleConnectionState {
   disconnecting,
 }
 
+/// Bond state enum used across platform boundary.
+enum BleBondState {
+  none,
+  bonding,
+  bonded,
+}
+

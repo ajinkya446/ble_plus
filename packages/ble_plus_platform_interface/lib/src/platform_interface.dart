@@ -33,9 +33,7 @@ abstract class BlePlusPlatform extends PlatformInterface {
   // ═══════════════════════════════════════════════════════════
 
   /// Stream of Bluetooth adapter state changes.
-  Stream<BleAdapterState> get adapterStateStream {
-    throw UnimplementedError('adapterStateStream has not been implemented.');
-  }
+  Stream<BleAdapterState> get adapterStateStream => const Stream.empty();
 
   /// Request the user to turn on Bluetooth (Android only).
   Future<bool> requestEnable() {
@@ -57,9 +55,7 @@ abstract class BlePlusPlatform extends PlatformInterface {
   }
 
   /// Stream that emits true when scanning starts, false when it stops.
-  Stream<bool> get isScanningStream {
-    throw UnimplementedError('isScanningStream has not been implemented.');
-  }
+  Stream<bool> get isScanningStream => const Stream.empty();
 
   // ═══════════════════════════════════════════════════════════
   // CENTRAL: CONNECTION
@@ -76,8 +72,24 @@ abstract class BlePlusPlatform extends PlatformInterface {
   }
 
   /// Stream of connection state change events.
-  Stream<BleConnectionEvent> get connectionEventStream {
-    throw UnimplementedError('connectionEventStream has not been implemented.');
+  Stream<BleConnectionEvent> get connectionEventStream => const Stream.empty();
+
+  /// Get the current bond state for a device.
+  Future<int> getBondState(String deviceId) {
+    throw UnimplementedError('getBondState() has not been implemented.');
+  }
+
+  /// Stream of bond state changes for a device.
+  Stream<BondStateEvent> get bondStateStream => const Stream.empty();
+
+  /// Initiate bonding with a device.
+  Future<void> createBond(String deviceId) {
+    throw UnimplementedError('createBond() has not been implemented.');
+  }
+
+  /// Remove a bond from the device.
+  Future<void> removeBond(String deviceId) {
+    throw UnimplementedError('removeBond() has not been implemented.');
   }
 
   /// Get list of currently connected device IDs.
@@ -125,11 +137,8 @@ abstract class BlePlusPlatform extends PlatformInterface {
   }
 
   /// Stream of characteristic value updates (from notifications/reads).
-  Stream<CharacteristicValueEvent> get characteristicValueStream {
-    throw UnimplementedError(
-      'characteristicValueStream has not been implemented.',
-    );
-  }
+  Stream<CharacteristicValueEvent> get characteristicValueStream =>
+      const Stream.empty();
 
   /// Read a descriptor value.
   Future<List<int>> readDescriptor(
@@ -162,9 +171,7 @@ abstract class BlePlusPlatform extends PlatformInterface {
   }
 
   /// Stream of MTU change events.
-  Stream<MtuChangeEvent> get mtuChangeStream {
-    throw UnimplementedError('mtuChangeStream has not been implemented.');
-  }
+  Stream<MtuChangeEvent> get mtuChangeStream => const Stream.empty();
 
   // ═══════════════════════════════════════════════════════════
   // CENTRAL: RSSI
@@ -219,14 +226,10 @@ abstract class BlePlusPlatform extends PlatformInterface {
   }
 
   /// Stream of data received on L2CAP channels.
-  Stream<L2CapDataEvent> get l2capDataStream {
-    throw UnimplementedError('l2capDataStream has not been implemented.');
-  }
+  Stream<L2CapDataEvent> get l2capDataStream => const Stream.empty();
 
   /// Stream of L2CAP channel close events.
-  Stream<L2CapCloseEvent> get l2capCloseStream {
-    throw UnimplementedError('l2capCloseStream has not been implemented.');
-  }
+  Stream<L2CapCloseEvent> get l2capCloseStream => const Stream.empty();
 
   // ═══════════════════════════════════════════════════════════
   // PERIPHERAL: ADVERTISING
@@ -243,9 +246,7 @@ abstract class BlePlusPlatform extends PlatformInterface {
   }
 
   /// Stream of advertising state changes.
-  Stream<bool> get isAdvertisingStream {
-    throw UnimplementedError('isAdvertisingStream has not been implemented.');
-  }
+  Stream<bool> get isAdvertisingStream => const Stream.empty();
 
   // ═══════════════════════════════════════════════════════════
   // PERIPHERAL: GATT SERVER
@@ -300,28 +301,18 @@ abstract class BlePlusPlatform extends PlatformInterface {
   // ═══════════════════════════════════════════════════════════
 
   /// Stream of central devices connecting/disconnecting from our GATT server.
-  Stream<PeripheralConnectionEvent> get peripheralConnectionStream {
-    throw UnimplementedError(
-      'peripheralConnectionStream has not been implemented.',
-    );
-  }
+  Stream<PeripheralConnectionEvent> get peripheralConnectionStream =>
+      const Stream.empty();
 
   /// Stream of read requests from centrals.
-  Stream<ReadRequestEvent> get readRequestStream {
-    throw UnimplementedError('readRequestStream has not been implemented.');
-  }
+  Stream<ReadRequestEvent> get readRequestStream => const Stream.empty();
 
   /// Stream of write requests from centrals.
-  Stream<WriteRequestEvent> get writeRequestStream {
-    throw UnimplementedError('writeRequestStream has not been implemented.');
-  }
+  Stream<WriteRequestEvent> get writeRequestStream => const Stream.empty();
 
   /// Stream of subscription (notify/indicate) changes.
-  Stream<SubscriptionChangeEvent> get subscriptionChangeStream {
-    throw UnimplementedError(
-      'subscriptionChangeStream has not been implemented.',
-    );
-  }
+  Stream<SubscriptionChangeEvent> get subscriptionChangeStream =>
+      const Stream.empty();
 
   // ═══════════════════════════════════════════════════════════
   // PERIPHERAL: L2CAP SERVER
@@ -342,11 +333,8 @@ abstract class BlePlusPlatform extends PlatformInterface {
   }
 
   /// Stream of incoming L2CAP channel connections (server side).
-  Stream<L2CapChannelOpenedEvent> get l2capServerChannelStream {
-    throw UnimplementedError(
-      'l2capServerChannelStream has not been implemented.',
-    );
-  }
+  Stream<L2CapChannelOpenedEvent> get l2capServerChannelStream =>
+      const Stream.empty();
 
   // ═══════════════════════════════════════════════════════════
   // BACKGROUND
@@ -363,11 +351,7 @@ abstract class BlePlusPlatform extends PlatformInterface {
   }
 
   /// Stream of restored device IDs (iOS state restoration).
-  Stream<List<String>> get restoredDeviceIdsStream {
-    throw UnimplementedError(
-      'restoredDeviceIdsStream has not been implemented.',
-    );
-  }
+  Stream<List<String>> get restoredDeviceIdsStream => const Stream.empty();
 
   // ═══════════════════════════════════════════════════════════
   // DISPOSE

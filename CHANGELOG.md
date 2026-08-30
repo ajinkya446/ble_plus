@@ -1,11 +1,20 @@
-## Unreleased
+## 1.0.6 - 2026-08-30
 
+- **Documentation refresh for the federated plugin layout**: README and architecture docs now reflect the actual workspace status, including the honest platform support matrix and the fact that the live plugin code is the `ble_plus` package under a Melos workspace.
+- **Public API restoration**: the plugin barrel export now correctly re-exports the public central/peripheral types that the example app and downstream users rely on (`BleCentral`, `BleDevice`, `BleScanResult`, `BleConnection`, `BleError`, `BleBondState`, and related types).
+- **Platform interface completeness**: bond-state streams and enums were restored in the shared event model so `BondStateEvent` and `BleBondState` are available in the platform contract without scope errors.
 - **Honest per-platform capabilities**: `PlatformCapabilities` now reports what each platform actually implements.
   - `MethodChannelBlePlus` (Android/iOS/macOS) is platform-aware: `l2cap` is `true` only on iOS/macOS (the Android native plugin has no L2CAP), `requestMtu` only on Android (iOS/macOS auto-negotiate), `bondManagement` only on Android (iOS/macOS auto-manage), and `connectionParameters` is `false` everywhere (no platform implements it — it was never even read-only).
   - `backgroundCentral`/`backgroundPeripheral` are `false` on mobile: the Android foreground service and iOS state restoration were never actually implemented — `enableBackground` was a silent no-op. `BleCentral.enableBackground()` now logs a warning and returns on mobile. Windows keeps its tray background mode (`backgroundCentral: true`).
   - `bondManagement` is now `false` on Windows and Linux (the APIs fell through to base no-ops; Windows' native bond handlers were never wired from the Dart facade).
   - Because `openL2CapChannel`, `publishL2CapChannel` and `requestConnectionParameters` are gated on these flags, unsupported calls now throw a clean `BleUnsupportedError` instead of a confusing native `PlatformException`.
 - **Docs**: README, ARCHITECTURE, AGENTS and the library doc updated to a support matrix that matches the code (Android: no L2CAP/descriptors/connection params; iOS/macOS: no connection params; Linux/Windows: no bond).
+
+- Restored the public plugin API surface for app consumption and example builds.
+- Fixed `BleBondState` availability across the platform-interface event model and bond state streams.
+- Cleaned up the federated/Melos workspace configuration without renaming the actual package (`ble_plus`).
+- Added and corrected package metadata for repository links and documentation.
+- Clarified the support matrix to reflect actual mobile/desktop capability implementations.
 
 ## 1.0.5 - 2026-08-17
 

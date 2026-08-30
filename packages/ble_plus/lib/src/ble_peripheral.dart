@@ -195,7 +195,7 @@ class BlePeripheral {
   }) async {
     _logger.debug(
       'BlePeripheral',
-      'notify(${characteristicUuid}, ${value.length} bytes)',
+      'notify($characteristicUuid, ${value.length} bytes)',
     );
 
     await _platform.sendNotification(

@@ -1,7 +1,8 @@
 <component name="libraryTable">
   <library name="Flutter Plugins" type="FlutterPluginsLibraryType">
     <CLASSES>
-      <root url="file://$PROJECT_DIR$" />
+      <root url="file://$PROJECT_DIR$/packages/ble_plus_ios" />
+      <root url="file://$PROJECT_DIR$/packages/ble_plus_android" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

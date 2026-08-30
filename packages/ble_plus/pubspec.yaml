@@ -1,10 +1,11 @@
 name: ble_plus
 description: A production-ready Flutter BLE plugin supporting Central and Peripheral roles, L2CAP, background operation, and connection parameters.
-version: 1.0.4
+version: 1.0.5
 homepage: https://github.com/ajinkya446/ble_plus
 repository: https://github.com/ajinkya446/ble_plus
 issue_tracker: https://github.com/ajinkya446/ble_plus/issues
 repository_name: ajinkya446/ble_plus
+publish_to: 'none'
 
 topics:
   - ble
@@ -15,6 +16,7 @@ topics:
 environment:
   sdk: ^3.11.0
   flutter: '>=3.3.0'
+resolution: workspace
 
 dependencies:
   flutter:
@@ -22,27 +24,11 @@ dependencies:
   flutter_web_plugins:
     sdk: flutter
   plugin_platform_interface: ^2.0.2
-  ble_plus_platform_interface: ^0.0.1
+  ble_plus_platform_interface:
+    path: ../ble_plus_platform_interface
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
 
-flutter:
-  plugin:
-    platforms:
-      android:
-        package: com.example.ble_plus
-        pluginClass: BlePlusPlugin
-      ios:
-        pluginClass: BlePlusPlugin
-      macos:
-        pluginClass: BlePlusPlugin
-      web:
-        pluginClass: BlePlusWeb
-        fileName: src/platform/ble_plus_web.dart
-      linux:
-        dartPluginClass: BlePlusLinux
-      windows:
-        pluginClass: BlePlusPlugin

@@ -1,1 +1,1 @@
-// DEPRECATED: This package is not used. See root ble_plus package.
+// Active iOS implementation package for the federated ble_plus workspace.

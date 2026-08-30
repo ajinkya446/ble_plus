@@ -1,3 +1,21 @@
-# This file is no longer used. The project is a single Flutter plugin package.
-# Melos was removed in favor of a simpler single-package structure.
-# To federate later, split packages out and re-enable melos.
+name: ble_plus_workspace
+
+packages:
+  - packages/*
+
+scripts:
+  analyze:
+    run: melos exec -c 1 -- flutter analyze
+    description: Analyze all packages in the workspace.
+
+  test:
+    run: melos exec -c 1 -- flutter test
+    description: Run unit tests across all packages.
+
+  format:
+    run: melos exec -c 1 -- dart format lib test
+    description: Format Dart sources in each package.
+
+  get:
+    run: melos exec -c 1 -- flutter pub get
+    description: Fetch dependencies for each package.

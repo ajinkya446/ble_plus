@@ -4,6 +4,10 @@ A production-ready Flutter BLE plugin with **Central** and **Peripheral** roles 
 
 [![pub package](https://img.shields.io/pub/v/ble_plus.svg)](https://pub.dev/packages/ble_plus)
 
+## Latest Release
+
+`ble_plus` 1.0.6 focuses on making the package usable as a clean federated plugin with Melos while preserving the canonical package name `ble_plus`. This release restores the public API exports used by example apps and downstream integrations, fixes bond-state wiring in the platform interface, and updates the documentation to match the real platform support matrix.
+
 ## Features
 
 - **Central Mode**: Scan, connect, discover services, read/write/notify characteristics

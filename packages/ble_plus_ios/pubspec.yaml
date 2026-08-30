@@ -1,12 +1,15 @@
-name: ble_plus_ios_unused
-description: Unused - see root package.
-version: 1.0.4
+name: ble_plus_ios
+description: iOS implementation of the federated ble_plus platform package.
+version: 1.0.5
+homepage: https://github.com/ajinkya446/ble_plus
 repository: https://github.com/ajinkya446/ble_plus
+issue_tracker: https://github.com/ajinkya446/ble_plus/issues
 repository_name: ajinkya446/ble_plus
 publish_to: 'none'
 
 environment:
   sdk: ^3.11.0
+resolution: workspace
 
 dependencies:
   flutter:
@@ -18,3 +21,9 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+flutter:
+  plugin:
+    platforms:
+      ios:
+        pluginClass: BlePlusPlugin

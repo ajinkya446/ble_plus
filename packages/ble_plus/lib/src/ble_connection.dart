@@ -47,6 +47,17 @@ class BleConnection {
       .where((event) => event.deviceId == _device.id)
       .map((event) => event.state);
 
+  /// Current bond/pair state of the device.
+  Future<BleBondState> get bondState async {
+    final state = await _platform.getBondState(_device.id);
+    return BleBondState.values[state];
+  }
+
+  /// Stream of bond state changes for this device.
+  Stream<BleBondState> get bondStateStream => _platform.bondStateStream
+      .where((event) => event.deviceId == _device.id)
+      .map((event) => event.bondState);
+
   /// Whether still connected.
   bool get isConnected => state == BleConnectionState.connected;
 
@@ -258,6 +269,18 @@ class BleConnection {
   }
 
   // ─── Disconnect ──────────────────────────────────────────
+
+  /// Initiate bonding/pairing with the device.
+  Future<void> createBond() async {
+    _logger.info('BleConnection', 'createBond(${_device.id})');
+    await _platform.createBond(_device.id);
+  }
+
+  /// Remove the bond with the device.
+  Future<void> removeBond() async {
+    _logger.info('BleConnection', 'removeBond(${_device.id})');
+    await _platform.removeBond(_device.id);
+  }
 
   /// Disconnect from the device and release all resources.
   Future<void> disconnect() async {

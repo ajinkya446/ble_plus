@@ -63,7 +63,6 @@ class BleL2CapChannel {
       .where((event) => event.channelId == _channelId)
       .map((event) {
     _isOpen = false;
-    return null;
   });
 }
 

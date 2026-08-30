@@ -1,2 +1,2 @@
-// DEPRECATED: This package is not used. See root ble_plus package.
+// Active Android implementation package for the federated ble_plus workspace.
 

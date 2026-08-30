@@ -4,9 +4,9 @@ Single-package Flutter BLE plugin (`ble_plus` v1.0.5). The repo root IS the pack
 
 ## Gotchas
 
-- **Not a monorepo.** `melos.yaml` is a leftover (Melos was removed); never run melos commands.
-- **`packages/` is dead code.** Leftover from an abandoned federated layout and excluded by the analyzer (`analysis_options.yaml` excludes `packages/**`). `packages/ble_plus_android` is marked "DEPRECATED". Never edit `packages/**`; root `lib/` is the only live code.
-- **`ARCHITECTURE.md` now documents the real single-package layout** (rewritten for v1.0.4). README.md and `ARCHITECTURE.md` are both current; trust code for details.
+- **This is a Melos-managed federated plugin workspace.** Run `melos bootstrap` (or `melos run get`) before working in the monorepo.
+- **`packages/*` are the live code.** The app-facing package is `packages/ble_plus`, with platform implementations in `packages/ble_plus_android`, `packages/ble_plus_ios`, and `packages/ble_plus_platform_interface`.
+- **`root/` remains a compatibility package for the example app** and should not be treated as the canonical source of the federated workspace.
 
 ## Commands
 

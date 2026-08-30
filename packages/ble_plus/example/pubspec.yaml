@@ -1,7 +1,9 @@
-name: ble_plus_example_unused
-description: DEPRECATED - see root example/ instead.
-version: 1.0.4
+name: ble_plus_example
+description: Example app for the federated ble_plus workspace.
+version: 1.0.5
+homepage: https://github.com/ajinkya446/ble_plus
 repository: https://github.com/ajinkya446/ble_plus
+issue_tracker: https://github.com/ajinkya446/ble_plus/issues
 repository_name: ajinkya446/ble_plus
 publish_to: 'none'
 
